@@ -1,0 +1,6 @@
+[Unit]
+Description=Atheer RADAR nightly DB backup
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sh /home/gis-syr/Desktop/scraplan/scripts/backup_db.sh

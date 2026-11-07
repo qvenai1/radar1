@@ -1,0 +1,19 @@
+[Unit]
+Description=Atheer RADAR MT position-quality tagger (MT-DETECT-2) — MarineTraffic track
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/gis-syr/Desktop/scraplan
+EnvironmentFile=-/home/gis-syr/Desktop/scraplan/.env
+ExecStartPre=/bin/sh -c 'for i in $(seq 1 30); do nc -z 127.0.0.1 5435 && exit 0; sleep 2; done; exit 0'
+
+# ⛔ THIS UNIT MUST RUN BEFORE THE MT DETECTORS, and it is why they can run at all.
+# `implied_speed_kn` and `position_quality` are not broadcast fields — this tagger writes
+# them, and until MT-DETECT-2 it had only ever run over vessel_states. detect_zone_dwell and
+# detect_gnss_anomaly read both, so on MarineTraffic they are downstream of this run.
+#
+# ⚠ 45-minute overlap against a 15-minute cadence — the vessel_states precedent, and for the
+# same reason: a fix's verdict needs its NEIGHBOURS, so the window must re-include fixes
+# already tagged or a window-edge teleport_return can never resolve. The tagger is
+# idempotent (WHERE-CHANGED guard), so the overlap costs nothing.
+ExecStart=/home/gis-syr/Desktop/scraplan/.venv/bin/python scripts/backfill_position_quality.py --track marinetraffic --since-minutes 45

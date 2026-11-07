@@ -1,0 +1,785 @@
+{
+ "_asset": "zones_aoi.json",
+ "_schema_version": 1,
+ "_note": "Committed, dated reference gazetteer of offshore hydrocarbon infrastructure ZONES (gas fields + platforms) for the East Mediterranean theater. Loaded ONCE in-process and NEVER fetched at runtime (mirrors backend/data/airports_aoi.json, mmsi_mid.json). ZONES-1: asset only -- no detector, no zone_dwell events, no composite wiring (those are ZONES-2/3).",
+ "manifest": {
+  "build_date": "2026-07-26",
+  "scope": "East Mediterranean theater: Cyprus, Israel, Lebanon, Syria, Egyptian Nile Delta, S. Turkey. A sub-window of the maritime collector bbox (12-42N, 24-63.5E), deliberately scoped -- see 'deferred'.",
+  "zone_types": [
+   "gas_field",
+   "platform"
+  ],
+  "counts": {
+   "total": 36,
+   "gas_field": 7,
+   "platform": 29
+  },
+  "sources": {
+   "GOGET": {
+    "name": "GEM Global Oil and Gas Extraction Tracker (GOGET)",
+    "geometry": "field reservoir CENTROID points (not platforms/wells)",
+    "license": "CC-BY-4.0 (tracker data)",
+    "accessed_via": "GEM public per-field pages on gem.wiki (page content CC-BY-SA-4.0)",
+    "access_note": "The GOGET .xlsx bulk file is served behind an email-gated download form and was not fetchable in the build environment; the seven named-field centroids were read from GEM's public gem.wiki field pages instead (same tracker). Each feature cites its exact gem.wiki page in source_ref. Coordinate carries GEM's own 'exact' precision flag.",
+    "vintage": "March 2026 release",
+    "cross_check": "GEM centroids validated against Wikipedia where available: agree to ~20-35 km (Leviathan GEM 33.00/33.65 vs Wiki 33.17/33.62; Aphrodite GEM 33.18/33.34 vs Wiki 33.09/32.98). That spread IS the field-centroid ambiguity and motivates the gas_field 'assumed' radius.",
+    "retrieved": "2026-07-26"
+   },
+   "OSM": {
+    "name": "OpenStreetMap",
+    "geometry": "offshore platform POINTS (surveyed structures)",
+    "license": "ODbL-1.0",
+    "attribution": "(c) OpenStreetMap contributors",
+    "odbl_obligation": "ODbL requires attribution AND share-alike. This committed extract is a Produced Work derived from OSM: the attribution above is carried here and every OSM-derived feature is individually tagged source='OSM' with its osm.org element URL in source_ref, so the obligation is traceable per feature. Any redistribution of this asset or a derived DB must preserve the attribution and, for the OSM-derived subset, the ODbL share-alike terms.",
+    "query": "Overpass: (node/way[man_made=offshore_platform]; node/way[seamark:type=platform]) over the East Med box (30-38N, 24-37E); man_made=water_works and Aegean (lon<29E) features excluded; near-duplicates (<80 m) de-duplicated.",
+    "retrieved": "2026-07-26"
+   }
+  },
+  "radius_policy": {
+   "platform": {
+    "radius_m": 500.0,
+    "basis": "sourced",
+    "note": "UNCLOS Art. 60(5) offshore-installation safety-zone radius (500 m); a surveyed point structure, and 500 m exceeds typical OSM node positional error (~tens of m)"
+   },
+   "gas_field": {
+    "radius_m": 5000.0,
+    "basis": "assumed",
+    "note": "conservative near-field working-area default: GEM provides a reservoir CENTROID, not a field-extent polygon, and cross-source centroid ambiguity is ~20-35 km (GEM vs Wikipedia for Leviathan/Aphrodite). A field can span tens of km, so this radius under-covers extent and the centre is approximate -- a gas_field dwell is therefore WEAKER evidence than a surveyed-platform dwell"
+   },
+   "honesty": "Every feature records radius_basis (sourced|assumed). A dwell over a gas_field zone (assumed radius around an approximate reservoir centroid) is WEAKER evidence than a dwell over a platform zone (sourced 500 m safety-zone radius around a surveyed point). This distinction must survive into the ZONES-2 dwell output."
+  },
+  "egypt_clarification": "Including Egyptian Nile-Delta platforms and the Egyptian offshore does NOT reverse the standing Egypt AOI deferral. That deferral concerns M1 territorial-sea CLASSIFICATION (a derivation layer over vessel positions); this asset is REFERENCE GEOMETRY for infrastructure inside the collector bbox. Observability, not political AOI membership, governs what belongs here -- Egyptian waters are inside the collector bbox.",
+  "deferred": {
+   "gulf_iran_theater": {
+    "status": "deferred",
+    "reason": "Intelligence SCOPE decision, not a data gap: the Persian Gulf / Iranian offshore is a separate theater, deferred together with the Egypt/Iran geographic expansion as one coherent future change. When that expansion happens, Gulf zones come in with it. The collector DOES observe the Gulf (data extends to 59.29E), so this layer is deliberately blind to Gulf infrastructure dwell despite the vessel data existing -- a scope choice, not a coverage gap. Reversible.",
+    "observed_but_excluded_counts": {
+     "gulf_north_kuwait_qatar_bahrain": 156,
+     "gulf_south_uae_oman": 763,
+     "iraq_iran_gulf_head": 494,
+     "iran_s_caspian": 443,
+     "note": "OSM platform counts, recorded so extension is scoped"
+    },
+    "practical_side_note": "Overpass also rate-limited/504'd on Gulf-sized queries during the build, but that is an environment limitation, not the reason for deferral."
+   },
+   "submarine_cables": {
+    "status": "deferred",
+    "reason": "No legitimately redistributable open geometry for East-Med submarine cables (ZONES-pre): TeleGeography's CC grant covers the map IMAGE only, its data is subscriber-gated and its public repo removed; EMODnet (CC-BY-4.0) and OSM (ODbL) are near-empty in the AOI. Reversible if a licensed source appears.",
+    "buffer_spec_ready": {
+     "half_width_nm": 1.0,
+     "half_width_m": 1852,
+     "basis": "Australia Telecommunications Act cable-protection-zone standard (1 NM either side); 0.25 NM (ICPC) floor"
+    }
+   },
+   "listed_ports": {
+    "status": "deferred",
+    "reason": "No open sanctions list (OFAC/EU/UN/UK) enumerates ports as PLACES -- they list persons/entities/vessels; ports appear only in address text or prose advisories. And 'sanctioned' is a DATED legal state that moves (Syria's core sanctions revoked 2025-06-30). Reversible only as a citations-only, provenance-framed asset ('named in [list] as of [date]', never 'sanctioned port')."
+   }
+  }
+ },
+ "zones": [
+  {
+   "zone_id": "gasfield-leviathan",
+   "zone_name": "Leviathan",
+   "zone_type": "gas_field",
+   "lat": 33.0014,
+   "lon": 33.649,
+   "radius_m": 5000.0,
+   "radius_basis": "assumed",
+   "radius_note": "conservative near-field working-area default: GEM provides a reservoir CENTROID, not a field-extent polygon, and cross-source centroid ambiguity is ~20-35 km (GEM vs Wikipedia for Leviathan/Aphrodite). A field can span tens of km, so this radius under-covers extent and the centre is approximate -- a gas_field dwell is therefore WEAKER evidence than a surveyed-platform dwell",
+   "country": "Israel",
+   "coord_precision": "exact",
+   "source": "GOGET",
+   "source_ref": "https://www.gem.wiki/Leviathan_Gas_Field",
+   "license": "CC-BY-4.0 (GOGET tracker data); accessed via gem.wiki page content CC-BY-SA-4.0",
+   "source_vintage": "GEM Global Oil and Gas Extraction Tracker, March 2026 release",
+   "captured_at": "2026-07-26"
+  },
+  {
+   "zone_id": "gasfield-tamar",
+   "zone_name": "Tamar",
+   "zone_type": "gas_field",
+   "lat": 32.9862,
+   "lon": 34.003,
+   "radius_m": 5000.0,
+   "radius_basis": "assumed",
+   "radius_note": "conservative near-field working-area default: GEM provides a reservoir CENTROID, not a field-extent polygon, and cross-source centroid ambiguity is ~20-35 km (GEM vs Wikipedia for Leviathan/Aphrodite). A field can span tens of km, so this radius under-covers extent and the centre is approximate -- a gas_field dwell is therefore WEAKER evidence than a surveyed-platform dwell",
+   "country": "Israel",
+   "coord_precision": "exact",
+   "source": "GOGET",
+   "source_ref": "https://www.gem.wiki/Tamar_Oil_and_Gas_Field_(Israel)",
+   "license": "CC-BY-4.0 (GOGET tracker data); accessed via gem.wiki page content CC-BY-SA-4.0",
+   "source_vintage": "GEM Global Oil and Gas Extraction Tracker, March 2026 release",
+   "captured_at": "2026-07-26"
+  },
+  {
+   "zone_id": "gasfield-karish",
+   "zone_name": "Karish",
+   "zone_type": "gas_field",
+   "lat": 33.2283,
+   "lon": 34.289,
+   "radius_m": 5000.0,
+   "radius_basis": "assumed",
+   "radius_note": "conservative near-field working-area default: GEM provides a reservoir CENTROID, not a field-extent polygon, and cross-source centroid ambiguity is ~20-35 km (GEM vs Wikipedia for Leviathan/Aphrodite). A field can span tens of km, so this radius under-covers extent and the centre is approximate -- a gas_field dwell is therefore WEAKER evidence than a surveyed-platform dwell",
+   "country": "Israel",
+   "coord_precision": "exact",
+   "source": "GOGET",
+   "source_ref": "https://www.gem.wiki/Karish_Gas_Field",
+   "license": "CC-BY-4.0 (GOGET tracker data); accessed via gem.wiki page content CC-BY-SA-4.0",
+   "source_vintage": "GEM Global Oil and Gas Extraction Tracker, March 2026 release",
+   "captured_at": "2026-07-26"
+  },
+  {
+   "zone_id": "gasfield-tanin",
+   "zone_name": "Tanin",
+   "zone_type": "gas_field",
+   "lat": 33.1413,
+   "lon": 33.8629,
+   "radius_m": 5000.0,
+   "radius_basis": "assumed",
+   "radius_note": "conservative near-field working-area default: GEM provides a reservoir CENTROID, not a field-extent polygon, and cross-source centroid ambiguity is ~20-35 km (GEM vs Wikipedia for Leviathan/Aphrodite). A field can span tens of km, so this radius under-covers extent and the centre is approximate -- a gas_field dwell is therefore WEAKER evidence than a surveyed-platform dwell",
+   "country": "Israel",
+   "coord_precision": "exact",
+   "source": "GOGET",
+   "source_ref": "https://www.gem.wiki/Tanin_Gas_Field",
+   "license": "CC-BY-4.0 (GOGET tracker data); accessed via gem.wiki page content CC-BY-SA-4.0",
+   "source_vintage": "GEM Global Oil and Gas Extraction Tracker, March 2026 release",
+   "captured_at": "2026-07-26"
+  },
+  {
+   "zone_id": "gasfield-aphrodite",
+   "zone_name": "Aphrodite",
+   "zone_type": "gas_field",
+   "lat": 33.1844,
+   "lon": 33.3423,
+   "radius_m": 5000.0,
+   "radius_basis": "assumed",
+   "radius_note": "conservative near-field working-area default: GEM provides a reservoir CENTROID, not a field-extent polygon, and cross-source centroid ambiguity is ~20-35 km (GEM vs Wikipedia for Leviathan/Aphrodite). A field can span tens of km, so this radius under-covers extent and the centre is approximate -- a gas_field dwell is therefore WEAKER evidence than a surveyed-platform dwell",
+   "country": "Cyprus",
+   "coord_precision": "exact",
+   "source": "GOGET",
+   "source_ref": "https://www.gem.wiki/Aphrodite_Oil_and_Gas_Field_(Cyprus)",
+   "license": "CC-BY-4.0 (GOGET tracker data); accessed via gem.wiki page content CC-BY-SA-4.0",
+   "source_vintage": "GEM Global Oil and Gas Extraction Tracker, March 2026 release",
+   "captured_at": "2026-07-26"
+  },
+  {
+   "zone_id": "gasfield-calypso",
+   "zone_name": "Calypso",
+   "zone_type": "gas_field",
+   "lat": 33.5252,
+   "lon": 31.7766,
+   "radius_m": 5000.0,
+   "radius_basis": "assumed",
+   "radius_note": "conservative near-field working-area default: GEM provides a reservoir CENTROID, not a field-extent polygon, and cross-source centroid ambiguity is ~20-35 km (GEM vs Wikipedia for Leviathan/Aphrodite). A field can span tens of km, so this radius under-covers extent and the centre is approximate -- a gas_field dwell is therefore WEAKER evidence than a surveyed-platform dwell",
+   "country": "Cyprus",
+   "coord_precision": "exact",
+   "source": "GOGET",
+   "source_ref": "https://www.gem.wiki/Calypso_Gas_Field",
+   "license": "CC-BY-4.0 (GOGET tracker data); accessed via gem.wiki page content CC-BY-SA-4.0",
+   "source_vintage": "GEM Global Oil and Gas Extraction Tracker, March 2026 release",
+   "captured_at": "2026-07-26"
+  },
+  {
+   "zone_id": "gasfield-glaucus",
+   "zone_name": "Glaucus",
+   "zone_type": "gas_field",
+   "lat": 33.4579,
+   "lon": 31.7115,
+   "radius_m": 5000.0,
+   "radius_basis": "assumed",
+   "radius_note": "conservative near-field working-area default: GEM provides a reservoir CENTROID, not a field-extent polygon, and cross-source centroid ambiguity is ~20-35 km (GEM vs Wikipedia for Leviathan/Aphrodite). A field can span tens of km, so this radius under-covers extent and the centre is approximate -- a gas_field dwell is therefore WEAKER evidence than a surveyed-platform dwell",
+   "country": "Cyprus",
+   "coord_precision": "exact",
+   "source": "GOGET",
+   "source_ref": "https://www.gem.wiki/Glaucus_Gas_Field",
+   "license": "CC-BY-4.0 (GOGET tracker data); accessed via gem.wiki page content CC-BY-SA-4.0",
+   "source_vintage": "GEM Global Oil and Gas Extraction Tracker, March 2026 release",
+   "captured_at": "2026-07-26"
+  },
+  {
+   "zone_id": "platform-osm-node-2076574872",
+   "zone_name": null,
+   "zone_type": "platform",
+   "lat": 31.49459,
+   "lon": 32.57877,
+   "radius_m": 500.0,
+   "radius_basis": "sourced",
+   "radius_note": "UNCLOS Art. 60(5) offshore-installation safety-zone radius (500 m); a surveyed point structure, and 500 m exceeds typical OSM node positional error (~tens of m)",
+   "country": "Egypt (Nile Delta)",
+   "coord_precision": "surveyed",
+   "source": "OSM",
+   "source_ref": "https://www.openstreetmap.org/node/2076574872",
+   "osm_tags": {
+    "seamark:type": "platform"
+   },
+   "license": "ODbL-1.0",
+   "source_vintage": "OpenStreetMap live extract",
+   "captured_at": "2026-07-26"
+  },
+  {
+   "zone_id": "platform-osm-node-2076574897",
+   "zone_name": null,
+   "zone_type": "platform",
+   "lat": 31.50651,
+   "lon": 32.53679,
+   "radius_m": 500.0,
+   "radius_basis": "sourced",
+   "radius_note": "UNCLOS Art. 60(5) offshore-installation safety-zone radius (500 m); a surveyed point structure, and 500 m exceeds typical OSM node positional error (~tens of m)",
+   "country": "Egypt (Nile Delta)",
+   "coord_precision": "surveyed",
+   "source": "OSM",
+   "source_ref": "https://www.openstreetmap.org/node/2076574897",
+   "osm_tags": {
+    "seamark:type": "platform"
+   },
+   "license": "ODbL-1.0",
+   "source_vintage": "OpenStreetMap live extract",
+   "captured_at": "2026-07-26"
+  },
+  {
+   "zone_id": "platform-osm-node-2076574936",
+   "zone_name": null,
+   "zone_type": "platform",
+   "lat": 31.52635,
+   "lon": 32.50219,
+   "radius_m": 500.0,
+   "radius_basis": "sourced",
+   "radius_note": "UNCLOS Art. 60(5) offshore-installation safety-zone radius (500 m); a surveyed point structure, and 500 m exceeds typical OSM node positional error (~tens of m)",
+   "country": "Egypt (Nile Delta)",
+   "coord_precision": "surveyed",
+   "source": "OSM",
+   "source_ref": "https://www.openstreetmap.org/node/2076574936",
+   "osm_tags": {
+    "seamark:type": "platform"
+   },
+   "license": "ODbL-1.0",
+   "source_vintage": "OpenStreetMap live extract",
+   "captured_at": "2026-07-26"
+  },
+  {
+   "zone_id": "platform-osm-node-2076574970",
+   "zone_name": null,
+   "zone_type": "platform",
+   "lat": 31.55004,
+   "lon": 32.43673,
+   "radius_m": 500.0,
+   "radius_basis": "sourced",
+   "radius_note": "UNCLOS Art. 60(5) offshore-installation safety-zone radius (500 m); a surveyed point structure, and 500 m exceeds typical OSM node positional error (~tens of m)",
+   "country": "Egypt (Nile Delta)",
+   "coord_precision": "surveyed",
+   "source": "OSM",
+   "source_ref": "https://www.openstreetmap.org/node/2076574970",
+   "osm_tags": {
+    "seamark:type": "platform"
+   },
+   "license": "ODbL-1.0",
+   "source_vintage": "OpenStreetMap live extract",
+   "captured_at": "2026-07-26"
+  },
+  {
+   "zone_id": "platform-osm-node-2076575018",
+   "zone_name": null,
+   "zone_type": "platform",
+   "lat": 31.56163,
+   "lon": 32.49086,
+   "radius_m": 500.0,
+   "radius_basis": "sourced",
+   "radius_note": "UNCLOS Art. 60(5) offshore-installation safety-zone radius (500 m); a surveyed point structure, and 500 m exceeds typical OSM node positional error (~tens of m)",
+   "country": "Egypt (Nile Delta)",
+   "coord_precision": "surveyed",
+   "source": "OSM",
+   "source_ref": "https://www.openstreetmap.org/node/2076575018",
+   "osm_tags": {
+    "seamark:type": "platform"
+   },
+   "license": "ODbL-1.0",
+   "source_vintage": "OpenStreetMap live extract",
+   "captured_at": "2026-07-26"
+  },
+  {
+   "zone_id": "platform-osm-node-2076575045",
+   "zone_name": null,
+   "zone_type": "platform",
+   "lat": 31.56719,
+   "lon": 32.43581,
+   "radius_m": 500.0,
+   "radius_basis": "sourced",
+   "radius_note": "UNCLOS Art. 60(5) offshore-installation safety-zone radius (500 m); a surveyed point structure, and 500 m exceeds typical OSM node positional error (~tens of m)",
+   "country": "Egypt (Nile Delta)",
+   "coord_precision": "surveyed",
+   "source": "OSM",
+   "source_ref": "https://www.openstreetmap.org/node/2076575045",
+   "osm_tags": {
+    "seamark:type": "platform"
+   },
+   "license": "ODbL-1.0",
+   "source_vintage": "OpenStreetMap live extract",
+   "captured_at": "2026-07-26"
+  },
+  {
+   "zone_id": "platform-osm-node-2076575091",
+   "zone_name": null,
+   "zone_type": "platform",
+   "lat": 31.57175,
+   "lon": 32.43639,
+   "radius_m": 500.0,
+   "radius_basis": "sourced",
+   "radius_note": "UNCLOS Art. 60(5) offshore-installation safety-zone radius (500 m); a surveyed point structure, and 500 m exceeds typical OSM node positional error (~tens of m)",
+   "country": "Egypt (Nile Delta)",
+   "coord_precision": "surveyed",
+   "source": "OSM",
+   "source_ref": "https://www.openstreetmap.org/node/2076575091",
+   "osm_tags": {
+    "seamark:type": "platform"
+   },
+   "license": "ODbL-1.0",
+   "source_vintage": "OpenStreetMap live extract",
+   "captured_at": "2026-07-26"
+  },
+  {
+   "zone_id": "platform-osm-node-2076575108",
+   "zone_name": null,
+   "zone_type": "platform",
+   "lat": 31.58646,
+   "lon": 31.27399,
+   "radius_m": 500.0,
+   "radius_basis": "sourced",
+   "radius_note": "UNCLOS Art. 60(5) offshore-installation safety-zone radius (500 m); a surveyed point structure, and 500 m exceeds typical OSM node positional error (~tens of m)",
+   "country": "Egypt (Nile Delta)",
+   "coord_precision": "surveyed",
+   "source": "OSM",
+   "source_ref": "https://www.openstreetmap.org/node/2076575108",
+   "osm_tags": {
+    "seamark:type": "platform"
+   },
+   "license": "ODbL-1.0",
+   "source_vintage": "OpenStreetMap live extract",
+   "captured_at": "2026-07-26"
+  },
+  {
+   "zone_id": "platform-osm-node-2076575113",
+   "zone_name": null,
+   "zone_type": "platform",
+   "lat": 31.59473,
+   "lon": 31.24501,
+   "radius_m": 500.0,
+   "radius_basis": "sourced",
+   "radius_note": "UNCLOS Art. 60(5) offshore-installation safety-zone radius (500 m); a surveyed point structure, and 500 m exceeds typical OSM node positional error (~tens of m)",
+   "country": "Egypt (Nile Delta)",
+   "coord_precision": "surveyed",
+   "source": "OSM",
+   "source_ref": "https://www.openstreetmap.org/node/2076575113",
+   "osm_tags": {
+    "seamark:type": "platform"
+   },
+   "license": "ODbL-1.0",
+   "source_vintage": "OpenStreetMap live extract",
+   "captured_at": "2026-07-26"
+  },
+  {
+   "zone_id": "platform-osm-node-2076575132",
+   "zone_name": null,
+   "zone_type": "platform",
+   "lat": 31.60972,
+   "lon": 32.76166,
+   "radius_m": 500.0,
+   "radius_basis": "sourced",
+   "radius_note": "UNCLOS Art. 60(5) offshore-installation safety-zone radius (500 m); a surveyed point structure, and 500 m exceeds typical OSM node positional error (~tens of m)",
+   "country": "Egypt (Nile Delta)",
+   "coord_precision": "surveyed",
+   "source": "OSM",
+   "source_ref": "https://www.openstreetmap.org/node/2076575132",
+   "osm_tags": {
+    "seamark:type": "platform"
+   },
+   "license": "ODbL-1.0",
+   "source_vintage": "OpenStreetMap live extract",
+   "captured_at": "2026-07-26"
+  },
+  {
+   "zone_id": "platform-osm-node-2076575142",
+   "zone_name": null,
+   "zone_type": "platform",
+   "lat": 31.61005,
+   "lon": 32.5111,
+   "radius_m": 500.0,
+   "radius_basis": "sourced",
+   "radius_note": "UNCLOS Art. 60(5) offshore-installation safety-zone radius (500 m); a surveyed point structure, and 500 m exceeds typical OSM node positional error (~tens of m)",
+   "country": "Egypt (Nile Delta)",
+   "coord_precision": "surveyed",
+   "source": "OSM",
+   "source_ref": "https://www.openstreetmap.org/node/2076575142",
+   "osm_tags": {
+    "seamark:type": "platform"
+   },
+   "license": "ODbL-1.0",
+   "source_vintage": "OpenStreetMap live extract",
+   "captured_at": "2026-07-26"
+  },
+  {
+   "zone_id": "platform-osm-node-2076575145",
+   "zone_name": null,
+   "zone_type": "platform",
+   "lat": 31.61315,
+   "lon": 32.51669,
+   "radius_m": 500.0,
+   "radius_basis": "sourced",
+   "radius_note": "UNCLOS Art. 60(5) offshore-installation safety-zone radius (500 m); a surveyed point structure, and 500 m exceeds typical OSM node positional error (~tens of m)",
+   "country": "Egypt (Nile Delta)",
+   "coord_precision": "surveyed",
+   "source": "OSM",
+   "source_ref": "https://www.openstreetmap.org/node/2076575145",
+   "osm_tags": {
+    "seamark:type": "platform"
+   },
+   "license": "ODbL-1.0",
+   "source_vintage": "OpenStreetMap live extract",
+   "captured_at": "2026-07-26"
+  },
+  {
+   "zone_id": "platform-osm-node-2076575150",
+   "zone_name": null,
+   "zone_type": "platform",
+   "lat": 31.61468,
+   "lon": 32.2212,
+   "radius_m": 500.0,
+   "radius_basis": "sourced",
+   "radius_note": "UNCLOS Art. 60(5) offshore-installation safety-zone radius (500 m); a surveyed point structure, and 500 m exceeds typical OSM node positional error (~tens of m)",
+   "country": "Egypt (Nile Delta)",
+   "coord_precision": "surveyed",
+   "source": "OSM",
+   "source_ref": "https://www.openstreetmap.org/node/2076575150",
+   "osm_tags": {
+    "seamark:type": "platform"
+   },
+   "license": "ODbL-1.0",
+   "source_vintage": "OpenStreetMap live extract",
+   "captured_at": "2026-07-26"
+  },
+  {
+   "zone_id": "platform-osm-node-2076575204",
+   "zone_name": null,
+   "zone_type": "platform",
+   "lat": 31.65618,
+   "lon": 31.23628,
+   "radius_m": 500.0,
+   "radius_basis": "sourced",
+   "radius_note": "UNCLOS Art. 60(5) offshore-installation safety-zone radius (500 m); a surveyed point structure, and 500 m exceeds typical OSM node positional error (~tens of m)",
+   "country": "Egypt (Nile Delta)",
+   "coord_precision": "surveyed",
+   "source": "OSM",
+   "source_ref": "https://www.openstreetmap.org/node/2076575204",
+   "osm_tags": {
+    "seamark:type": "platform"
+   },
+   "license": "ODbL-1.0",
+   "source_vintage": "OpenStreetMap live extract",
+   "captured_at": "2026-07-26"
+  },
+  {
+   "zone_id": "platform-osm-node-2076575209",
+   "zone_name": null,
+   "zone_type": "platform",
+   "lat": 31.70075,
+   "lon": 32.31784,
+   "radius_m": 500.0,
+   "radius_basis": "sourced",
+   "radius_note": "UNCLOS Art. 60(5) offshore-installation safety-zone radius (500 m); a surveyed point structure, and 500 m exceeds typical OSM node positional error (~tens of m)",
+   "country": "Egypt (Nile Delta)",
+   "coord_precision": "surveyed",
+   "source": "OSM",
+   "source_ref": "https://www.openstreetmap.org/node/2076575209",
+   "osm_tags": {
+    "seamark:type": "platform"
+   },
+   "license": "ODbL-1.0",
+   "source_vintage": "OpenStreetMap live extract",
+   "captured_at": "2026-07-26"
+  },
+  {
+   "zone_id": "platform-osm-node-2076575215",
+   "zone_name": null,
+   "zone_type": "platform",
+   "lat": 31.70483,
+   "lon": 32.40829,
+   "radius_m": 500.0,
+   "radius_basis": "sourced",
+   "radius_note": "UNCLOS Art. 60(5) offshore-installation safety-zone radius (500 m); a surveyed point structure, and 500 m exceeds typical OSM node positional error (~tens of m)",
+   "country": "Egypt (Nile Delta)",
+   "coord_precision": "surveyed",
+   "source": "OSM",
+   "source_ref": "https://www.openstreetmap.org/node/2076575215",
+   "osm_tags": {
+    "seamark:type": "platform"
+   },
+   "license": "ODbL-1.0",
+   "source_vintage": "OpenStreetMap live extract",
+   "captured_at": "2026-07-26"
+  },
+  {
+   "zone_id": "platform-osm-node-2076575284",
+   "zone_name": null,
+   "zone_type": "platform",
+   "lat": 31.76657,
+   "lon": 32.515,
+   "radius_m": 500.0,
+   "radius_basis": "sourced",
+   "radius_note": "UNCLOS Art. 60(5) offshore-installation safety-zone radius (500 m); a surveyed point structure, and 500 m exceeds typical OSM node positional error (~tens of m)",
+   "country": "Egypt (Nile Delta)",
+   "coord_precision": "surveyed",
+   "source": "OSM",
+   "source_ref": "https://www.openstreetmap.org/node/2076575284",
+   "osm_tags": {
+    "seamark:type": "platform"
+   },
+   "license": "ODbL-1.0",
+   "source_vintage": "OpenStreetMap live extract",
+   "captured_at": "2026-07-26"
+  },
+  {
+   "zone_id": "platform-osm-node-2076575289",
+   "zone_name": null,
+   "zone_type": "platform",
+   "lat": 31.78166,
+   "lon": 31.24533,
+   "radius_m": 500.0,
+   "radius_basis": "sourced",
+   "radius_note": "UNCLOS Art. 60(5) offshore-installation safety-zone radius (500 m); a surveyed point structure, and 500 m exceeds typical OSM node positional error (~tens of m)",
+   "country": "Egypt (Nile Delta)",
+   "coord_precision": "surveyed",
+   "source": "OSM",
+   "source_ref": "https://www.openstreetmap.org/node/2076575289",
+   "osm_tags": {
+    "seamark:type": "platform"
+   },
+   "license": "ODbL-1.0",
+   "source_vintage": "OpenStreetMap live extract",
+   "captured_at": "2026-07-26"
+  },
+  {
+   "zone_id": "platform-osm-node-2076575298",
+   "zone_name": null,
+   "zone_type": "platform",
+   "lat": 31.83395,
+   "lon": 32.15493,
+   "radius_m": 500.0,
+   "radius_basis": "sourced",
+   "radius_note": "UNCLOS Art. 60(5) offshore-installation safety-zone radius (500 m); a surveyed point structure, and 500 m exceeds typical OSM node positional error (~tens of m)",
+   "country": "Egypt (Nile Delta)",
+   "coord_precision": "surveyed",
+   "source": "OSM",
+   "source_ref": "https://www.openstreetmap.org/node/2076575298",
+   "osm_tags": {
+    "seamark:type": "platform"
+   },
+   "license": "ODbL-1.0",
+   "source_vintage": "OpenStreetMap live extract",
+   "captured_at": "2026-07-26"
+  },
+  {
+   "zone_id": "platform-osm-node-2076575314",
+   "zone_name": null,
+   "zone_type": "platform",
+   "lat": 31.85747,
+   "lon": 32.09809,
+   "radius_m": 500.0,
+   "radius_basis": "sourced",
+   "radius_note": "UNCLOS Art. 60(5) offshore-installation safety-zone radius (500 m); a surveyed point structure, and 500 m exceeds typical OSM node positional error (~tens of m)",
+   "country": "Egypt (Nile Delta)",
+   "coord_precision": "surveyed",
+   "source": "OSM",
+   "source_ref": "https://www.openstreetmap.org/node/2076575314",
+   "osm_tags": {
+    "seamark:type": "platform"
+   },
+   "license": "ODbL-1.0",
+   "source_vintage": "OpenStreetMap live extract",
+   "captured_at": "2026-07-26"
+  },
+  {
+   "zone_id": "platform-osm-node-2076575315",
+   "zone_name": null,
+   "zone_type": "platform",
+   "lat": 31.86147,
+   "lon": 32.10904,
+   "radius_m": 500.0,
+   "radius_basis": "sourced",
+   "radius_note": "UNCLOS Art. 60(5) offshore-installation safety-zone radius (500 m); a surveyed point structure, and 500 m exceeds typical OSM node positional error (~tens of m)",
+   "country": "Egypt (Nile Delta)",
+   "coord_precision": "surveyed",
+   "source": "OSM",
+   "source_ref": "https://www.openstreetmap.org/node/2076575315",
+   "osm_tags": {
+    "seamark:type": "platform"
+   },
+   "license": "ODbL-1.0",
+   "source_vintage": "OpenStreetMap live extract",
+   "captured_at": "2026-07-26"
+  },
+  {
+   "zone_id": "platform-osm-node-2076575317",
+   "zone_name": null,
+   "zone_type": "platform",
+   "lat": 31.90334,
+   "lon": 32.21497,
+   "radius_m": 500.0,
+   "radius_basis": "sourced",
+   "radius_note": "UNCLOS Art. 60(5) offshore-installation safety-zone radius (500 m); a surveyed point structure, and 500 m exceeds typical OSM node positional error (~tens of m)",
+   "country": "Egypt (Nile Delta)",
+   "coord_precision": "surveyed",
+   "source": "OSM",
+   "source_ref": "https://www.openstreetmap.org/node/2076575317",
+   "osm_tags": {
+    "seamark:type": "platform"
+   },
+   "license": "ODbL-1.0",
+   "source_vintage": "OpenStreetMap live extract",
+   "captured_at": "2026-07-26"
+  },
+  {
+   "zone_id": "platform-osm-node-2076575319",
+   "zone_name": null,
+   "zone_type": "platform",
+   "lat": 31.91429,
+   "lon": 31.90519,
+   "radius_m": 500.0,
+   "radius_basis": "sourced",
+   "radius_note": "UNCLOS Art. 60(5) offshore-installation safety-zone radius (500 m); a surveyed point structure, and 500 m exceeds typical OSM node positional error (~tens of m)",
+   "country": "Egypt (Nile Delta)",
+   "coord_precision": "surveyed",
+   "source": "OSM",
+   "source_ref": "https://www.openstreetmap.org/node/2076575319",
+   "osm_tags": {
+    "seamark:type": "platform"
+   },
+   "license": "ODbL-1.0",
+   "source_vintage": "OpenStreetMap live extract",
+   "captured_at": "2026-07-26"
+  },
+  {
+   "zone_id": "platform-osm-node-2076575320",
+   "zone_name": null,
+   "zone_type": "platform",
+   "lat": 31.91708,
+   "lon": 31.85745,
+   "radius_m": 500.0,
+   "radius_basis": "sourced",
+   "radius_note": "UNCLOS Art. 60(5) offshore-installation safety-zone radius (500 m); a surveyed point structure, and 500 m exceeds typical OSM node positional error (~tens of m)",
+   "country": "Egypt (Nile Delta)",
+   "coord_precision": "surveyed",
+   "source": "OSM",
+   "source_ref": "https://www.openstreetmap.org/node/2076575320",
+   "osm_tags": {
+    "seamark:type": "platform"
+   },
+   "license": "ODbL-1.0",
+   "source_vintage": "OpenStreetMap live extract",
+   "captured_at": "2026-07-26"
+  },
+  {
+   "zone_id": "platform-osm-node-8553898152",
+   "zone_name": "Zahr El-Baharia",
+   "zone_type": "platform",
+   "lat": 31.83667,
+   "lon": 32.285,
+   "radius_m": 500.0,
+   "radius_basis": "sourced",
+   "radius_note": "UNCLOS Art. 60(5) offshore-installation safety-zone radius (500 m); a surveyed point structure, and 500 m exceeds typical OSM node positional error (~tens of m)",
+   "country": "Egypt (Nile Delta)",
+   "coord_precision": "surveyed",
+   "source": "OSM",
+   "source_ref": "https://www.openstreetmap.org/node/8553898152",
+   "osm_tags": {
+    "seamark:type": "platform"
+   },
+   "license": "ODbL-1.0",
+   "source_vintage": "OpenStreetMap live extract",
+   "captured_at": "2026-07-26"
+  },
+  {
+   "zone_id": "platform-osm-node-9456310958",
+   "zone_name": null,
+   "zone_type": "platform",
+   "lat": 32.11667,
+   "lon": 30.64,
+   "radius_m": 500.0,
+   "radius_basis": "sourced",
+   "radius_note": "UNCLOS Art. 60(5) offshore-installation safety-zone radius (500 m); a surveyed point structure, and 500 m exceeds typical OSM node positional error (~tens of m)",
+   "country": "Egypt (Nile Delta)",
+   "coord_precision": "surveyed",
+   "source": "OSM",
+   "source_ref": "https://www.openstreetmap.org/node/9456310958",
+   "osm_tags": {
+    "seamark:type": "platform"
+   },
+   "license": "ODbL-1.0",
+   "source_vintage": "OpenStreetMap live extract",
+   "captured_at": "2026-07-26"
+  },
+  {
+   "zone_id": "platform-osm-way-215263078",
+   "zone_name": "Tamar Gas Platform",
+   "zone_type": "platform",
+   "lat": 33.17056,
+   "lon": 33.61807,
+   "radius_m": 500.0,
+   "radius_basis": "sourced",
+   "radius_note": "UNCLOS Art. 60(5) offshore-installation safety-zone radius (500 m); a surveyed point structure, and 500 m exceeds typical OSM node positional error (~tens of m)",
+   "country": "Israel (Levantine basin)",
+   "coord_precision": "approximate",
+   "source": "OSM",
+   "source_ref": "https://www.openstreetmap.org/way/215263078",
+   "osm_tags": {
+    "man_made": "offshore_platform",
+    "seamark:type": "platform"
+   },
+   "license": "ODbL-1.0",
+   "source_vintage": "OpenStreetMap live extract",
+   "captured_at": "2026-07-26",
+   "data_quality_note": "OSM fixme: position is not accurate!!! But it is existing in this area somewhere.",
+   "detectable": false,
+   "detectable_reason": "OSM position flagged inaccurate (fixme); ~100 km from the real Tamar platform (~32.43N/34.34E). Real Tamar is covered by gasfield-tamar, so excluded from dwell to avoid fabricated evidence over open water."
+  },
+  {
+   "zone_id": "platform-osm-way-295453649",
+   "zone_name": null,
+   "zone_type": "platform",
+   "lat": 31.73451,
+   "lon": 34.29494,
+   "radius_m": 500.0,
+   "radius_basis": "sourced",
+   "radius_note": "UNCLOS Art. 60(5) offshore-installation safety-zone radius (500 m); a surveyed point structure, and 500 m exceeds typical OSM node positional error (~tens of m)",
+   "country": "Israel (Levantine basin)",
+   "coord_precision": "surveyed",
+   "source": "OSM",
+   "source_ref": "https://www.openstreetmap.org/way/295453649",
+   "osm_tags": {
+    "seamark:type": "platform"
+   },
+   "license": "ODbL-1.0",
+   "source_vintage": "OpenStreetMap live extract",
+   "captured_at": "2026-07-26"
+  },
+  {
+   "zone_id": "platform-osm-way-1318444335",
+   "zone_name": null,
+   "zone_type": "platform",
+   "lat": 32.59878,
+   "lon": 34.80604,
+   "radius_m": 500.0,
+   "radius_basis": "sourced",
+   "radius_note": "UNCLOS Art. 60(5) offshore-installation safety-zone radius (500 m); a surveyed point structure, and 500 m exceeds typical OSM node positional error (~tens of m)",
+   "country": "Israel (Levantine basin)",
+   "coord_precision": "surveyed",
+   "source": "OSM",
+   "source_ref": "https://www.openstreetmap.org/way/1318444335",
+   "osm_tags": {
+    "man_made": "offshore_platform"
+   },
+   "license": "ODbL-1.0",
+   "source_vintage": "OpenStreetMap live extract",
+   "captured_at": "2026-07-26"
+  }
+ ]
+}

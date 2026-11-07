@@ -1,0 +1,47 @@
+[Unit]
+Description=Atheer RADAR notify GATEWAY (NOTIFY-2) — Telegram commands in, alerts out
+# Ordering only, not a hard dependency: the gateway starts fine without the DB and retries.
+After=network.target
+
+# ⚠ THESE TWO BELONG IN [Unit], NOT [Service]. They were in [Service] on first install and
+# systemd logged "Unknown key 'StartLimitIntervalSec' in section [Service], ignoring" — so
+# the crash-loop protection was silently absent while the unit looked correctly configured.
+# A misconfigured token would have restarted every 10 s forever with nothing to show for it.
+# Caught by reading the unit's own journal after starting it, not by review.
+StartLimitBurst=5
+StartLimitIntervalSec=120
+
+[Service]
+Type=simple
+WorkingDirectory=/home/gis-syr/Desktop/scraplan
+EnvironmentFile=-/home/gis-syr/Desktop/scraplan/.env
+
+# ⚠ RESIDENT, where every other scraplan unit is a oneshot timer — a deliberate exception.
+# A oneshot cannot long-poll, so commands would only be answered once per tick: a stranger
+# sending /start would wait up to two minutes for any reply and conclude the bot is dead.
+# Cost measured BEFORE choosing it: 8.5 GiB available on this host against ~50 MB for one
+# idle Python process holding a socket. §6.10's memory pressure is real; this is not what
+# threatens it.
+#
+# ⛔ THIS IS THE ONLY PROCESS THAT TALKS TO TELEGRAM. Rate limits are per-BOT, so two
+# senders would each respect a client-side floor and together break the real ceiling, with
+# neither able to see the other's 429s. scraplan-notify.service (the tick) only decides
+# events and writes them to notify_outbox; this drains that queue.
+ExecStartPre=/bin/sh -c 'for i in $(seq 1 30); do nc -z 127.0.0.1 5435 && exit 0; sleep 2; done; exit 0'
+ExecStart=/home/gis-syr/Desktop/scraplan/.venv/bin/python -m backend.notify.gateway
+
+# Long-polling means a normal exit is always abnormal — the loop should never end on its
+# own. Restart unconditionally, with a floor so a misconfigured token cannot spin.
+Restart=always
+RestartSec=10
+# A crash loop is made VISIBLE by the StartLimit* pair in [Unit] above: five failures inside
+# two minutes stops the unit, so `systemctl --user status` shows a red unit instead of one
+# that has been endlessly restarting and refusing every subscription for hours.
+
+# The queue is durable (notify_outbox), so a stop loses nothing in flight — anything not
+# yet delivered is still owed and goes out on the next start.
+KillSignal=SIGTERM
+TimeoutStopSec=20
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,18 @@
+[Unit]
+Description=Re-tag GNSS position quality every 15 minutes (stamps newly ingested fixes)
+
+[Timer]
+# Every 15 minutes — a freshly-ingested fix is tagged the first run after it lands,
+# and a window-edge teleport_return resolves once its successor arrives. The runner is
+# idempotent (WHERE-changed guard), so frequent runs only refresh; they never duplicate
+# or re-stamp unchanged rows.
+# Staggered off :00 (arch review finding 6): five heavy scans fired together on the
+# hour against the DB the API reads. Same offset technique as the mt-* family.
+OnCalendar=*:3/15
+# Power-loss resilient: a run missed while the box was off fires on next boot. (A long
+# outage that leaves a >45 min tagging gap is closed by a manual --decompress-chunks
+# full retag, not the timer — see the service unit.)
+Persistent=true
+
+[Install]
+WantedBy=timers.target

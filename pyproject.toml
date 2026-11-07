@@ -1,0 +1,35 @@
+# Root tool config only — the project is not packaged from here (the two
+# collector sub-packages have their own pyproject + stricter settings).
+#
+# Ruff on the backend was tech-stack review finding 4: the strictest tooling
+# guarded the smallest 10% of the code while the largest, most-coupled code had
+# none. Scope here: correctness families only (F = pyflakes, B = bugbear) —
+# adopted at ZERO findings on 2026-09-01. Style families (E501 long lines with
+# Arabic rationale comments, E7 compact-math semicolons, I import order) are
+# deliberate house style and stay out; widen select only with a green tree.
+#
+#   check:  .venv/bin/ruff check backend/ *.py tests/ scripts/
+
+[tool.ruff]
+target-version = "py313"
+extend-exclude = [
+    "maritime_source_marine",   # own pyproject: full select + mypy --strict
+    "aerial_source_ads",        # own pyproject: full select + mypy --strict
+    "frontend",
+    ".venv",
+]
+
+[tool.ruff.lint]
+select = ["F", "B"]
+
+# Mypy on the same scope as ruff (tech-stack finding 4, second half): LENIENT
+# adoption at zero errors — no strict flags yet; the two collector sub-packages
+# already run --strict from their own configs. The pydantic plugin is required:
+# without it every `Field(None, ...)` default reads as a missing argument.
+#
+#   check:  .venv/bin/mypy backend/
+[tool.mypy]
+python_version = "3.13"
+plugins = ["pydantic.mypy"]
+ignore_missing_imports = true
+files = ["backend"]

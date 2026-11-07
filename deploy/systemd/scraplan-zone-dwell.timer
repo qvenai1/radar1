@@ -1,0 +1,16 @@
+[Unit]
+Description=Re-run zone-dwell detection every 20 minutes (infrastructure safety-zone intrusions)
+
+[Timer]
+# Every 20 minutes — the same cadence as its nearest sibling (rendezvous): a dwell
+# becomes a session once the vessel's low-speed fixes are archived, and the detector
+# is idempotent (recompute-replace), so frequent runs only refresh; they never
+# duplicate. Before this timer existed the layer aged silently — it was 3 days
+# stale at deployment (last computed 2026-07-26 09:25:43Z).
+# Staggered off :00 (arch review finding 6) — offsets chosen clear of the mt-* family.
+OnCalendar=*:8/20
+# Power-loss resilient: a run missed while the box was off fires on next boot.
+Persistent=true
+
+[Install]
+WantedBy=timers.target

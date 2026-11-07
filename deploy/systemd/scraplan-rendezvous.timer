@@ -1,0 +1,14 @@
+[Unit]
+Description=Re-run rendezvous detection every 20 minutes (open-sea vessel meetings)
+
+[Timer]
+# Every 20 minutes — a meeting becomes a candidate once it has lasted >=1h and
+# the vessels' fixes are archived. The detector is idempotent (recompute-replace),
+# so frequent runs only refresh; they never duplicate.
+# Staggered off :00 (arch review finding 6) — offsets chosen clear of the mt-* family.
+OnCalendar=*:6/20
+# Power-loss resilient: a run missed while the box was off fires on next boot.
+Persistent=true
+
+[Install]
+WantedBy=timers.target

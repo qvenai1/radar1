@@ -1,0 +1,100 @@
+/*
+ * BIDI — the direction layer, and the LAST stylesheet in the cascade (THEME-3 commit 2).
+ *
+ * ⛔ WHY THESE RULES LEFT app.css. Forest's component layer has NO bidi handling at all —
+ * measured against the shipped file: **zero `unicode-bidi` declarations**, one direction
+ * signal (`[dir="ltr"] .switch …`) and four logical-property names across five uses. It is
+ * a system written for an LTR document, and it is about to be laid under surfaces that are
+ * Arabic-first with Latin data islands inside them. Its `.badge`, `.table`, `.input` and
+ * `.segment` rules will land on the very elements that carry an MMSI, an icao24, a NORAD id
+ * or a UTC stamp — the ones whose direction is load-bearing, not decorative.
+ *
+ * ⛔ SO THE PROJECT'S DIRECTION RULES MUST WIN STRUCTURALLY, NOT BY LUCK. Two mechanisms,
+ * because either alone has a hole:
+ *   1. this file is imported LAST (main.tsx), so at equal specificity it wins on order;
+ *   2. Forest's components are declared inside `@layer forest` (see forest.css), and an
+ *      UNLAYERED rule beats a layered one at ANY specificity. Order alone would not have
+ *      survived a Forest selector more specific than ours; the layer closes that.
+ *
+ * ⚠ ONLY THE DIRECTION DECLARATIONS MOVED. Every rule below still exists in app.css with
+ * its colour, font, spacing and layout intact — what was lifted out is `direction`,
+ * `unicode-bidi`, and the one `[dir="rtl"]` alignment rule that is direction handling by
+ * any reading. Splitting a rule this way is invisible by construction: same selector, same
+ * value, later sheet.
+ *
+ * ⚠ COVERAGE IS MEASURED IN SELECTORS, NOT DECLARATIONS — the FIX-LAYOUT-1 lesson: one rule
+ * can cover six surfaces, so counting declarations understates it by a factor. 19 isolate +
+ * 3 plaintext = 22 surfaces, unchanged by this move, and `verify:layout` now reads this file
+ * as well as app.css so the count cannot silently fall through the gap between them.
+ *
+ * WHICH TREATMENT EACH SURFACE GETS was measured in UI-3 by sampling real content:
+ *   pure Latin → `direction: ltr` + `isolate`   ·   mixed/unknown script → `plaintext`
+ * `plaintext` is not weaker isolation; it takes the base direction from the content's own
+ * first strong character instead of pinning a guess. That is why `.ag-note`, `.rc-sub` and
+ * `.rc-meta` are there: their script is not known at author time.
+ */
+
+/* ---------- the map, and the RTL data islands (digits/timestamps stay LTR) ---------- */
+.leaflet-container { direction: ltr; }
+.chart-card svg { direction: ltr; }
+.contact-list td, .feed-meta b, .strip-cell .v, .strip .icao,
+.chart-tip, .metric .n {
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+/* the numeric column of an RTL table still reads right-aligned in the physical sense */
+[dir="rtl"] .contact-list td.r, [dir="rtl"] .contact-list th.r { text-align: left; }
+
+/* ---------- strip / row data islands ---------- */
+.strip-route .ap .code { direction: ltr; unicode-bidi: isolate; }
+.alert-row .cs { direction: ltr; unicode-bidi: isolate; }
+/* squawk: forced LTR, deliberately NOT isolated — it sits alone in its own cell */
+.alert-row .sq { direction: ltr; }
+.detail-line .v.mono { direction: ltr; unicode-bidi: isolate; }
+
+/* ---------- the vessel popup: an RTL island on an LTR map ---------- */
+.leaflet-popup.vessel-pop .leaflet-popup-content { direction: rtl; }
+.vessel-pop td.v { direction: ltr; unicode-bidi: isolate; }
+
+/* ---------- UI-3: the DIV-ROW surfaces the table rule above cannot reach ----------
+ * The RTL-data-islands rule above isolates every TABLE-based list (`.contact-list td`) and
+ * the strip cells. It misses two families, because they use <div> rows rather than <td>:
+ * the alert-card surfaces, and the three analysis panels that render rows as divs
+ * (HullComposite / CrossSourcePanel / DarkVessels).
+ *
+ * Which treatment each class gets was MEASURED in UI-3, not assumed — the content of all
+ * nine candidates was sampled in the browser:
+ *   pure Latin → `direction: ltr` + isolate  (the list below)
+ *   mixed      → isolate only the Latin RUN  (`.identities` keeps its Arabic label RTL;
+ *                its names are wrapped in `.idn-names`)
+ *   Arabic     → NOT forced to LTR           (`.ag-note`, below) */
+.result-card .rc-title,
+.result-card .rc-note,
+.hull-composite .hull-name,
+.hull-composite .tl-summary,
+.idn-names,
+.xref-name,
+.dark-name {
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+/* ---------- script not known at author time → take it from the content ----------
+ * `.ag-note` is the hoisted per-signal note: normally ARABIC, but it falls back to the live
+ * English when the drift guard rejects a stale paraphrase (lib/caveats.ts). Its script is
+ * therefore not known at author time, so `plaintext` lets the base direction come from the
+ * content's own first strong character instead of pinning it either way. Forcing ltr would
+ * have mis-set the Arabic case, which is the common one.
+ *
+ * ⚠ DASH-CARD moved `.rc-sub` out of the forced-LTR list above for exactly that reason: it
+ * used to carry only the English `summary`, and maritime cards now put the ARABIC `headline`
+ * in it. `.rc-meta` is mixed by construction — an Arabic label «علم التسجيل:» followed by a
+ * Latin registry name.
+ * ⚠ Coverage is NOT reduced by `plaintext`: the surface stays isolated, it just isolates
+ * honestly instead of pinning one direction. */
+.ag-note { unicode-bidi: plaintext; }
+.rc-sub, .rc-meta { unicode-bidi: plaintext; }
+
+/* ---------- DASH-2g″: the entity panel's head label ---------- */
+.caveat-en { direction: ltr; unicode-bidi: isolate; }
+.ep-label { unicode-bidi: isolate; }

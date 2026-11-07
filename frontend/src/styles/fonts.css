@@ -1,0 +1,75 @@
+/* =====================================================================
+   Qomra Arabic — itf Qomra Arabic. Primary brand typeface.
+   Weights: Light 300 · Regular 400 · Medium 500 · Bold 600–700 · Black 900
+
+   ---------------------------------------------------------------------
+   PROVENANCE
+   ---------------------------------------------------------------------
+   FAMILY      "itf Qomra Arabic" — the name the files report themselves
+               (fc-query on Qomra-Regular.woff2).
+   SUPPLIED BY the project owner. Not downloaded, not fetched from a CDN or
+               a foundry by this repository; the ten files were handed over
+               and copied in byte-identical (cmp-verified, THEME-1).
+   FILES       5 weights × woff2 + woff = 10 files, 314 KB on disk.
+               Only 2 faces are ever fetched — 400 Regular and the folded
+               600–700 Bold, 52.2 KB of woff2 — measured via FontFaceSet:
+               300/500/900 report status "unloaded" while declared.
+   FALLBACK    Cairo. The live chain is
+                 --font-ui: "Qomra", "Cairo", system-ui, -apple-system, sans-serif
+               so a blocked or failed load degrades to the exact typeface
+               this project used before Qomra, not to a system default.
+               ⚠ NOT IBM Plex Sans Arabic. Forest's own --font-sans names
+               Plex as the fallback, but Plex is not bundled here and was
+               never imported (THEME-2 deliberately skipped that token), so
+               naming it would describe a face that cannot load. Switching
+               the fallback TO Plex would be a font-chain change and a new
+               asset — not a documentation fix — and is the owner's call.
+
+   ---------------------------------------------------------------------
+   LICENCE — READ BEFORE PUBLISHING THIS REPOSITORY
+   ---------------------------------------------------------------------
+   ⛔ The licence holder is the SYRIAN MINISTRY OF INFORMATION
+      (وزارة الإعلام السورية). It is NOT held by this project, and the
+      project's own licence does not extend to these files.
+   ⛔ The font files are NOT redistributable. `styles/fonts/` is currently
+      TRACKED in git (verified: not covered by any .gitignore rule), so if
+      this repository is ever made public or mirrored, either exclude
+      `frontend/src/styles/fonts/` from the published tree or replace the
+      typeface. Publishing as-is would redistribute them.
+
+   ⚠ Qomra has no SemiBold and no tabular figures. Both are documented
+   where they bite: the 600→Bold fold below, and the tnum no-ops noted in
+   app.css.
+   ===================================================================== */
+
+@font-face{
+  font-family:"Qomra";
+  font-weight:300;font-style:normal;font-display:swap;
+  src:url("fonts/Qomra-Light.woff2") format("woff2"),
+      url("fonts/Qomra-Light.woff") format("woff");
+}
+@font-face{
+  font-family:"Qomra";
+  font-weight:400;font-style:normal;font-display:swap;
+  src:url("fonts/Qomra-Regular.woff2") format("woff2"),
+      url("fonts/Qomra-Regular.woff") format("woff");
+}
+@font-face{
+  font-family:"Qomra";
+  font-weight:500;font-style:normal;font-display:swap;
+  src:url("fonts/Qomra-Medium.woff2") format("woff2"),
+      url("fonts/Qomra-Medium.woff") format("woff");
+}
+/* Qomra has no SemiBold; map 600–700 to Bold so semibold UI text stays strong */
+@font-face{
+  font-family:"Qomra";
+  font-weight:600 700;font-style:normal;font-display:swap;
+  src:url("fonts/Qomra-Bold.woff2") format("woff2"),
+      url("fonts/Qomra-Bold.woff") format("woff");
+}
+@font-face{
+  font-family:"Qomra";
+  font-weight:900;font-style:normal;font-display:swap;
+  src:url("fonts/Qomra-Black.woff2") format("woff2"),
+      url("fonts/Qomra-Black.woff") format("woff");
+}

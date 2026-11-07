@@ -1,0 +1,31 @@
+[Unit]
+Description=Atheer RADAR deep-retention backup (verified copy to the Windows store on F:)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/gis-syr/Desktop/scraplan
+# The destination, key, retention depth and size floor all have defaults in the script;
+# they are overridable here without editing it. Left unset deliberately — the measured
+# defaults (scraplanbak@10.0.0.113, ~/.ssh/winstore, F:\scraplan, keep 90) are the
+# deployed configuration.
+#
+# NO ssh-agent IS AVAILABLE HERE, and that is the point: the script pins
+# -i ~/.ssh/winstore with IdentitiesOnly=yes precisely because a user unit runs with no
+# SSH_AUTH_SOCK and no unlocked GNOME keyring. The identical trap on the serverq path is
+# documented at length in the header of backup_offsite.sh; this unit inherits the fix
+# rather than rediscovering it.
+#
+# MEASURED: `systemctl --user show-environment` DOES carry
+# SSH_AUTH_SOCK=/run/user/1000/gcr/ssh, so without the line below this unit would inherit
+# the desktop keyring agent and appear to work — right up until a reboot with no graphical
+# login, at which point every night fails silently.
+UnsetEnvironment=SSH_AUTH_SOCK
+ExecStart=/bin/sh /home/gis-syr/Desktop/scraplan/scripts/backup_windows.sh
+# This unit takes NO pg_dump of its own — it copies the artifact the 03:00 unit already
+# produced (see §3 of the script). So a full cycle is one 3.83 GB transfer at a MEASURED
+# 11.07 MB/s (docs/ENVIRONMENT.md §3, "LAN throughput to the Windows store") ≈ 6 minutes,
+# plus a destination-side Get-FileHash over the same 3.83 GB. One hour is far above both
+# and still bounded, so a wedged transfer cannot hold the unit open indefinitely.
+TimeoutStartSec=1h

@@ -1,0 +1,24 @@
+[Unit]
+Description=Atheer RADAR satellite elements refresh (CelesTrak → DB)
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/gis-syr/Desktop/scraplan
+EnvironmentFile=-/home/gis-syr/Desktop/scraplan/.env
+# Batch refresh of TLEs from CelesTrak. Positions are propagated client-side
+# (satellite.js), so this only needs to run a few times a day — CelesTrak
+# throttles aggressive polling.
+ExecStart=/home/gis-syr/Desktop/scraplan/.venv/bin/python tracker_satellites.py
+# Sat-Orbit: recompute the DERIVED orbit layer (satellite_orbit) from the TLEs
+# just refreshed, so the "always-current" orbital classification never lags the
+# elements. ExecStartPost runs ONLY after a successful ExecStart, so it always
+# derives from the fresh TLEs (same run, no scheduling gap). DB-only, no network
+# — cheap and idempotent: unchanged TLEs → 0 rows; a refreshed TLE (new epoch)
+# updates the row and advances tle_epoch. Power-loss resilience is inherited from
+# the timer (Persistent=true re-runs a missed refresh, which re-derives too).
+ExecStartPost=/home/gis-syr/Desktop/scraplan/.venv/bin/python scripts/backfill_orbit.py
+# Sat-Passes: recompute the AOI ground-track pass predictions from the fresh TLEs
+# (runs after the orbit recompute — same ExecStartPost chain, in order). Forward-
+# window cache (DELETE+INSERT), DB-only, batched SGP4 (~seconds). Keeps the
+# regional capstone current every refresh.
+ExecStartPost=/home/gis-syr/Desktop/scraplan/.venv/bin/python scripts/backfill_passes.py

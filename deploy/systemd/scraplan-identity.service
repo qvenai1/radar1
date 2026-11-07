@@ -1,0 +1,31 @@
+[Unit]
+Description=Atheer RADAR identity spine upkeep (A3 re-flag/rename + IMO-integrity axis)
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/gis-syr/Desktop/scraplan
+# DATABASE_URL lives in the git-ignored project .env. User-unit pattern: no
+# network-online.target (a SYSTEM target absent from the user session) — matches
+# scraplan-maritime/gaps/rendezvous.
+EnvironmentFile=-/home/gis-syr/Desktop/scraplan/.env
+# Wait briefly for the DB (same nc probe as scraplan-maritime), then never block boot.
+ExecStartPre=/bin/sh -c 'for i in $(seq 1 30); do nc -z 127.0.0.1 5435 && exit 0; sleep 2; done; exit 0'
+# Idempotent recompute-and-replace: re-detects re-flags (same IMO/diff MMSI) +
+# confirmed renames from current history and replaces the identity_change rows in
+# maritime_events. Cheap (GROUP BY imo/mmsi, no all-pairs). Correlates with A1/A2.
+ExecStart=/home/gis-syr/Desktop/scraplan/.venv/bin/python scripts/detect_identity_change.py
+# THEN the IMO-integrity axis on the same spine. Type=oneshot runs ExecStart lines
+# SEQUENTIALLY and aborts the rest on a non-zero exit, so ordering is guaranteed:
+# the detector runs first because it can surface identities worth stamping in the
+# same cycle, and the axis then covers everything the spine currently holds.
+#
+# Why it lives here rather than in its own unit: measured 0.61 s / 31.8 MB over the
+# whole table (a full recompute — the table is small), so a dedicated timer would
+# cost more in moving parts than in work. Leaving it MANUAL is what let it drift —
+# the axis went unstamped from 2026-07-25 to 2026-07-29 and accumulated 509
+# identities carrying an IMO but no verdict.
+#
+# Safe to run every cycle: the WHERE-changed write guard makes a no-op run write
+# nothing, and the runner asserts its own invariant afterwards (a NULL-IMO row is
+# never stamped: imo_method IS NULL must equal the NULL-imo count).
+ExecStart=/home/gis-syr/Desktop/scraplan/.venv/bin/python scripts/backfill_imo_integrity.py

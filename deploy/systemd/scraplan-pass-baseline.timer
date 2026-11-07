@@ -1,0 +1,23 @@
+[Unit]
+Description=Rebuild the satellite pass baseline daily (BASELINE-1)
+
+[Timer]
+# DAILY, and the cadence is set by what actually changes underneath it.
+#
+# The baseline is a 14-day distribution, so one more day of data moves a p10 by very little
+# — rebuilding hourly would spend CPU to reproduce almost the same numbers. What DOES change
+# is the element it is propagated from: scraplan-satellites refreshes TLEs every 6 hours,
+# and a fresher element slightly re-shapes the whole back-propagated window.
+#
+# 07:20 sits one hour after the 06:20 elements refresh, so the baseline is always built from
+# an element fetched the same morning rather than racing it. Measured cost: 84 satellites,
+# 20,161 samples each, 1.4 s total — negligible either way, which is why correctness of
+# ORDERING drove the choice rather than cost.
+OnCalendar=*-*-* 07:20:00
+
+# A run missed while the box was off fires on next boot: a stale baseline degrades the
+# comparison silently, and the classifier cannot tell "old norm" from "current norm".
+Persistent=true
+
+[Install]
+WantedBy=timers.target

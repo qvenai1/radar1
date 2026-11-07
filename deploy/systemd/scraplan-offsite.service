@@ -1,0 +1,31 @@
+[Unit]
+Description=Atheer RADAR off-host backup (verified copy to a second machine over SSH)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/gis-syr/Desktop/scraplan
+# The destination, key, retention depth and size floor all have defaults in the script;
+# they are overridable here without editing it. Left unset deliberately — the measured
+# defaults (serverq@10.10.20.57, ~/.ssh/serverq, keep 7) are the deployed configuration.
+#
+# NO ssh-agent IS AVAILABLE HERE, and that is the point: the script pins
+# -i ~/.ssh/serverq with IdentitiesOnly=yes precisely because a user unit runs with no
+# SSH_AUTH_SOCK and no unlocked GNOME keyring. Verified by running this unit from
+# systemd, not just from a shell. See the header of backup_offsite.sh.
+#
+# MEASURED: `systemctl --user show-environment` DOES carry
+# SSH_AUTH_SOCK=/run/user/1000/gcr/ssh, so without the line below this unit would
+# inherit the desktop keyring agent and appear to work — right up until a reboot with
+# no graphical login, or a locked keyring, at which point every night fails silently.
+# Unsetting it makes the unit's independence from the agent structural instead of
+# incidental, and makes a successful run here actual proof that the pinned on-disk key
+# is what carried it.
+UnsetEnvironment=SSH_AUTH_SOCK
+ExecStart=/bin/sh /home/gis-syr/Desktop/scraplan/scripts/backup_offsite.sh
+# A full cycle moves ~3.1 GB, and the one-time era upload adds 3.48 GB, at a MEASURED
+# 7.87 MB/s over the 100 Mb/s LAN (docs/ENVIRONMENT.md §3) — roughly 7 min nightly and
+# ~14 min on the first run. Three hours is far above both and still bounded, so a wedged
+# transfer cannot hold the unit open indefinitely.
+TimeoutStartSec=3h

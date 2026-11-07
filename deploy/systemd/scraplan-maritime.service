@@ -1,0 +1,26 @@
+[Unit]
+Description=Atheer RADAR maritime AIS collector (AISStream.io)
+After=default.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/gis-syr/Desktop/scraplan
+# AISSTREAM_API_KEY lives in the git-ignored project .env. tracker_maritime.py
+# loads it via python-dotenv; EnvironmentFile (optional, '-') also injects it
+# explicitly so the service does not depend on dotenv's cwd search.
+EnvironmentFile=-/home/gis-syr/Desktop/scraplan/.env
+# DB being down never stops the collector (archive is ground truth) — the
+# wait just avoids pointless mirror errors right after boot.
+ExecStartPre=/bin/sh -c 'for i in $(seq 1 30); do nc -z 127.0.0.1 5435 && exit 0; sleep 2; done; exit 0'
+# Same Middle East box as the aviation collectors. AISStream is terrestrial
+# AIS only, so effective coverage is the region's coasts (Red Sea, Gulf,
+# E. Mediterranean); the open sea stays dark by design. --db-url mirrors each
+# snapshot's moved-vessel delta into vessel_states (source=aisstream).
+ExecStart=/home/gis-syr/Desktop/scraplan/.venv/bin/python tracker_maritime.py \
+    --bbox 12.0 24.0 42.0 63.5 --interval 30 --output maritime_output \
+    --db-url ${DATABASE_URL}
+Restart=on-failure
+RestartSec=15
+
+[Install]
+WantedBy=default.target

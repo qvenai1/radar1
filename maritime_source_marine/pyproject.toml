@@ -1,0 +1,51 @@
+[project]
+name = "mtscraper"
+version = "0.1.0"
+description = "Standalone MarineTraffic live-map vessel scraper via browser interception"
+requires-python = ">=3.11"
+dependencies = [
+    "playwright>=1.61,<2",
+    "shapely>=2.0",
+    "pyproj>=3.5",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8",
+    "pytest-asyncio>=0.23",
+    "ruff>=0.6",
+    "mypy>=1.11",
+]
+
+[project.scripts]
+mtscraper = "mtscraper.main:main"
+mtscraper-map = "mtscraper.mapgen:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["mtscraper*"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "C4", "RUF"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_unused_ignores = true
+disallow_untyped_defs = true
+
+# shapely does not ship type stubs; pyproj ships py.typed and needs no override.
+[[tool.mypy.overrides]]
+module = ["shapely.*"]
+ignore_missing_imports = true

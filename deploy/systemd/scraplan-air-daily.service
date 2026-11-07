@@ -1,0 +1,16 @@
+[Unit]
+Description=Atheer RADAR air daily summary (DASH-BOARD-3b — per-country distinct airframes)
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/gis-syr/Desktop/scraplan
+# DATABASE_URL lives in the git-ignored project .env (loaded via python-dotenv;
+# EnvironmentFile '-' also injects it). User-unit pattern: no network-online.target
+# (a SYSTEM target absent from the user session) — matches the detector units.
+EnvironmentFile=-/home/gis-syr/Desktop/scraplan/.env
+# Wait briefly for the DB (same nc probe as its siblings), then never block boot.
+ExecStartPre=/bin/sh -c 'for i in $(seq 1 30); do nc -z 127.0.0.1 5435 && exit 0; sleep 2; done; exit 0'
+# ⛔ --yesterday, never today: a partial day plotted beside complete ones reads as a collapse.
+# UPSERT, so a missed run is made up by the next one and a re-run never duplicates a row.
+# Measured cost: 0.91 s for one day, 15.26 s for the whole 23-day backfill, 29 MB RSS.
+ExecStart=/home/gis-syr/Desktop/scraplan/.venv/bin/python -m backend.air_daily --yesterday

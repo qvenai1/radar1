@@ -1,0 +1,32 @@
+[Unit]
+Description=Atheer RADAR notify TICK (NOTIFY-2) — decides events, enqueues to subscribers
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/gis-syr/Desktop/scraplan
+# ⚠ NOTIFY-2: this unit NO LONGER TALKS TO TELEGRAM and needs no bot token. It reads the
+# alert feed, decides what counts as an event, and writes per-subscriber rows to
+# notify_outbox. scraplan-notify-gateway.service drains that queue — the only process that
+# sends, because Telegram's rate limits are per-BOT and two senders cannot respect one
+# ceiling between them.
+# DATABASE_URL lives in the git-ignored project .env (loaded via python-dotenv;
+# EnvironmentFile '-' also injects it so the run does not depend on dotenv's cwd).
+# (User-unit pattern: matches scraplan-gaps/quality/zone-dwell — no network-online.target,
+# which is a SYSTEM target absent from the user session.)
+EnvironmentFile=-/home/gis-syr/Desktop/scraplan/.env
+
+# ONESHOT, NOT A DAEMON, and the reason is measured: §6.10 of docs/PROJECT_STATE.md records
+# memory as this host's tightest resource (swap fully consumed, 22 containers running). A
+# oneshot holds nothing between ticks — all state is in notify_deliveries (migration 039),
+# so a tick is also independently crash-safe: there is no in-process state to corrupt.
+
+# Wait briefly for the DB (the ledger + the outbox) and for the API (the alert feed), then
+# never block. Both probes exit 0 on timeout: a tick that finds nothing simply does
+# nothing, and the next timer firing retries. The bot must never wedge the user session.
+ExecStartPre=/bin/sh -c 'for i in $(seq 1 15); do nc -z 127.0.0.1 5435 && exit 0; sleep 2; done; exit 0'
+ExecStartPre=/bin/sh -c 'for i in $(seq 1 15); do nc -z 127.0.0.1 8000 && exit 0; sleep 2; done; exit 0'
+
+# The runner reads GET /api/v1/alerts — the SAME endpoint the dashboard uses. It does not
+# import backend.alerts directly: that would fork ~200 lines of endpoint orchestration and
+# drift from a frozen contract. One definition of an alert, read over HTTP.
+ExecStart=/home/gis-syr/Desktop/scraplan/.venv/bin/python -m backend.notify.runner

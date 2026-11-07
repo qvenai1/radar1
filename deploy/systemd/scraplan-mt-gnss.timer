@@ -1,0 +1,11 @@
+[Unit]
+Description=Detect MarineTraffic GNSS anomalies every 15 minutes
+
+[Timer]
+# :10 — five minutes behind scraplan-mt-quality (:05) so it reads a freshly tagged window,
+# and clear of the AIS gnss timer (*:10/20) by running on a different period.
+OnCalendar=*:10/15
+Persistent=true
+
+[Install]
+WantedBy=timers.target

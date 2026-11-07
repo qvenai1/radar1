@@ -1,0 +1,27 @@
+[Unit]
+Description=Nightly deep-retention copy to the Windows store at 04:45
+
+[Timer]
+# 04:45 is chosen against the deployed timers, not picked round:
+#   00:05 scraplan-rotate  ·  01:37 scraplan-air-daily
+#   03:00 scraplan-backup   — the local dump this unit COPIES (~4 min)
+#   04:15 scraplan-offsite  — serverq, takes its own dump + ~8 min transfer, done by ~04:30
+#   05:30 scraplan-reentry
+# This sits in the quiet gap after the serverq push has finished and 45 minutes before the
+# reentry pull. ⛔ It must never run BEFORE 03:00: this unit does not dump, it copies
+# ~/scraplan-backups/opensky-<today>.sql.gz, which does not exist until the 03:00 unit has
+# written it. An earlier schedule would fail every night for a reason the error text would
+# state correctly and an operator would still misread as "the Windows store is broken".
+OnCalendar=*-*-* 04:45:00
+# Power-loss resilient: a run missed while the box was off fires on next boot. This tier is
+# the 90-day history, so the nights most likely to be missed are exactly the ones worth
+# not missing.
+#
+# ⚠ ONE CONSEQUENCE WORTH STATING: on a catch-up run the local dump being copied may be
+# YESTERDAY's date or absent entirely, in which case the script dies with an explicit
+# message rather than substituting a dump of its own. That is intended — see §3 of
+# scripts/backup_windows.sh.
+Persistent=true
+
+[Install]
+WantedBy=timers.target

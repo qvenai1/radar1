@@ -1,0 +1,23 @@
+[Unit]
+Description=Atheer RADAR MT rendezvous detector (MT-DETECT-1) — MarineTraffic track
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/gis-syr/Desktop/scraplan
+EnvironmentFile=-/home/gis-syr/Desktop/scraplan/.env
+ExecStartPre=/bin/sh -c 'for i in $(seq 1 30); do nc -z 127.0.0.1 5435 && exit 0; sleep 2; done; exit 0'
+
+# ⛔ THE WINDOW CANNOT MATCH THE TIMER, AND MEASUREMENT SAYS SO PLAINLY. A rendezvous is
+# defined as a SUSTAINED encounter: RDV_MIN_DURATION_S = 3600 s, and real MarineTraffic
+# encounters run 60-562 minutes with a 273-minute mean. A 15-minute scan window cannot
+# contain a 1-hour minimum, so it would find EXACTLY ZERO — the detector would run every
+# quarter hour, forever, and never report anything.
+#
+# --since-days 1 is the shortest window that comfortably exceeds the longest observed
+# encounter (562 min = 9.4 h). Measured run cost at this window: ~90 s, which is why the
+# 15-minute cadence is affordable; the 7-day window did not finish in 5 minutes.
+#
+# ⚠ And the DELETE is scoped to this same window, so a run rebuilds exactly the day it
+# scanned and cannot truncate older events — the rule that came out of the 2026-08-15
+# incident, where a scan narrower than the delete destroyed 53 rendezvous rows.
+ExecStart=/home/gis-syr/Desktop/scraplan/.venv/bin/python scripts/detect_rendezvous.py --source marinetraffic --since-days 1

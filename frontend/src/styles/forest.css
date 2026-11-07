@@ -1,0 +1,190 @@
+/*
+ * Forest design system — the BRIDGE layer (THEME-2, phase 2 of the migration).
+ *
+ * ⛔ FOREST DOES NOT REPLACE tokens.css. Measured in THEME-pre: 44 of the project's 47
+ * tokens have no Forest counterpart — the entire map/glyph/series/chart vocabulary
+ * (--glyph-air/vessel/sat/gnss/mil/adsb/darkland, --trail, --series-*, --chart-*,
+ * --tile-filter, --panel-glass, --scrim, --hair, --ink…). Forest is applied UNDER the
+ * project layer, never in its place. This file is imported BEFORE tokens.css so that on
+ * any name collision the project's value wins by cascade order.
+ *
+ * ⛔ THE SCOPING CONFLICT, and how it is resolved. Forest ships its semantic layer as
+ * `:root[data-direction="2"][data-mode="dark"]`. A `:root` selector CANNOT apply to a
+ * subtree — and this project depends on exactly that: `.map-host` carries its own
+ * `data-theme` (MapView.tsx) so the basemap's day/night recolours while the surrounding
+ * UI does not (theme.ts). Importing Forest's selectors verbatim would silently break the
+ * map's independence. So Forest's raw palette lands at `:root` (it is theme-independent
+ * constants) and its SEMANTIC layer is re-declared inside the project's own
+ * `[data-theme]` blocks below — which keeps the subtree mechanism intact.
+ *
+ * ⚠ WHAT THIS COMMIT DOES NOT DO: it does not repaint anything. The semantic vocabulary
+ * below resolves to the PROJECT's current values, so the rendered output is byte-identical.
+ * Adopting Direction 2's forest palette as the visible identity is a colour change, and a
+ * colour change cannot ship in the commit whose gate is "zero visible colour diff". The
+ * palette is here and ready; the switch is its own decision.
+ *
+ * ⚠ ROLE COLLAPSE, resolved here rather than inherited. In Forest's Direction 2 dark,
+ * FOUR roles share one hex — --info = --info-text = --text-muted = --success-text
+ * (#9cc3bb) — and --text-subtle = --success (forest-300). Consumed as shipped, an "info"
+ * badge would be indistinguishable from muted body text and from a success state. Every
+ * role below is given its own value.
+ */
+
+/* ⛔ THE LAYER DECLARATION, AND IT MUST BE FIRST IN THE CASCADE (THEME-3 commit 2).
+ *
+ * Naming a layer here — before any project rule — fixes its position: `forest` sorts below
+ * every UNLAYERED rule in the document, at ANY specificity. That is the guarantee cascade
+ * ORDER alone cannot give. Forest's component rules are written for an LTR document with
+ * generic class names (`.badge`, `.card`, `.table`, `.input`), and some of them are more
+ * specific than the project rule they would land on; ordering would have lost those and the
+ * loss would have been silent. Declaring the layer means the project does not have to win
+ * the specificity argument — it is not in the argument.
+ *
+ * ⚠ The layer is declared here and FILLED by styles/components.css (THEME-3 commits 3+).
+ * An empty declared layer costs nothing and is the whole point: the position is reserved
+ * before anything needs it, so no later commit can change the outcome by import order. */
+@layer forest;
+
+:root {
+  /* ---- RAW PALETTE (theme-independent constants; no project name collides) ---- */
+
+  /* Forest (primary brand) */
+  --forest-950: #001a18;
+  --forest-900: #002623;
+  --forest-800: #03342e;
+  --forest-700: #054239;
+  --forest-600: #0a5447;
+  --forest-500: #1c6657;
+  --forest-400: #428177;
+  --forest-300: #6aa297;
+  --forest-200: #9cc3bb;
+  --forest-100: #d3e5e0;
+  --forest-50: #eaf3f0;
+
+  /* Golden Wheat (accent / warmth) */
+  --wheat-800: #7c6c4d;
+  --wheat-700: #988561;
+  --wheat-600: #a89570;
+  --wheat-500: #b9a779;
+  --wheat-400: #c9bb93;
+  --wheat-300: #d9cfb1;
+  --wheat-200: #e5dfca;
+  --wheat-100: #edebe0;
+  --wheat-50: #f7f5ef;
+
+  /* Charcoal (neutrals) */
+  --char-950: #0f0f0f;
+  --char-900: #161616;
+  --char-850: #1c1c1b;
+  --char-800: #232322;
+  --char-750: #2c2a29;
+  --char-700: #3d3a3b;
+  --char-600: #514e4e;
+  --char-500: #6f6b6a;
+  --char-400: #928d8a;
+  --char-300: #b8b2ac;
+  --char-200: #d8d3cc;
+
+  /* Deep Umber (danger / depth) */
+  --umber-950: #1a0a0d;
+  --umber-900: #260f14;
+  --umber-800: #390f17;
+  --umber-700: #4a151e;
+  --umber-600: #5a1a24;
+  --umber-500: #6b1f2a;
+  --umber-400: #8a3340;
+  --umber-300: #a8505d;
+  --umber-200: #c97f89;
+
+  /* ---- SCALES ----
+   * ⚠ --sp-* is declared but NOT yet consumed. Measured in THEME-pre: rounding the
+   * project's 5/6/7/10/14/1 px values onto this 4px scale adds ~129px to the home's
+   * right panel. Applying it is a layout concern, not a token concern. */
+  --sp-1: 4px;  --sp-2: 8px;  --sp-3: 12px; --sp-4: 16px;
+  --sp-5: 20px; --sp-6: 24px; --sp-7: 32px; --sp-8: 40px;
+  --sp-9: 48px; --sp-10: 64px; --sp-12: 80px;
+
+  /* Forest's radii use --r-*; the project's own --radius/--radius-sm/--radius-xs are
+   * untouched and keep winning wherever app.css already references them. */
+  --r-xs: 4px; --r-sm: 6px; --r-md: 10px; --r-lg: 14px; --r-xl: 20px; --r-2xl: 26px;
+  --r-pill: 999px;
+
+  --fs-display: clamp(2.2rem, 1.4rem + 3vw, 3rem);
+  --fs-h1: 2rem;      --fs-h2: 1.55rem;   --fs-h3: 1.25rem;
+  --fs-lg: 1.0625rem; --fs-md: 0.9375rem; --fs-sm: 0.8125rem; --fs-xs: 0.75rem;
+  --lh-tight: 1.2; --lh-snug: 1.4; --lh-normal: 1.65;
+  --fw-regular: 400; --fw-medium: 500; --fw-semibold: 600; --fw-bold: 700;
+
+  --ease: cubic-bezier(.2, .7, .2, 1);
+  --dur: 180ms;
+
+  /* ⛔ Forest's --font-sans / --font-mono are deliberately NOT imported. --font-mono
+   * names IBM Plex Mono, which is not bundled and would fall back to ui-monospace,
+   * displacing the bundled JetBrains Mono that --font-data uses at 23 sites including
+   * bidi-isolated ones. --font-ui already carries Qomra (THEME-1). */
+}
+
+/* =====================================================================
+   SEMANTIC VOCABULARY — Forest's role names, project values.
+   Declared inside [data-theme] (NOT :root) so `.map-host` keeps its own set.
+   Prefix `--f-` so no project token is ever shadowed: measured, only --bg, --accent
+   and --danger collide by name, and --accent means the OPPOSITE thing in Direction 2
+   (project: the gold that paints an info badge; Forest: forest-400 green). Rebinding
+   it by name would silently repaint every info badge.
+   ===================================================================== */
+
+[data-theme="dark"] {
+  --f-bg: var(--bg);
+  --f-surface: var(--panel);
+  --f-surface-2: var(--panel-raised);
+  --f-surface-3: color-mix(in oklab, var(--panel-raised) 82%, var(--ink));
+  --f-border: var(--hair);
+  --f-border-strong: var(--accent-dim);
+
+  --f-text: var(--ink);
+  --f-text-muted: var(--ink-dim);
+  /* own value — in Direction 2 this collides with --success */
+  --f-text-subtle: color-mix(in oklab, var(--ink-dim) 68%, var(--panel));
+  --f-text-inverse: var(--bg);
+
+  --f-primary: var(--accent);
+  --f-primary-contrast: var(--bg);
+  --f-accent: var(--glyph-ground);
+
+  --f-success: var(--ok);
+  --f-warning: var(--alert);
+  --f-danger: var(--danger);
+  /* own value — in Direction 2 this collides with --text-muted AND --success-text */
+  --f-info: var(--accent);
+
+  --f-ring: var(--accent);
+  --f-shadow-sm: 0 1px 2px rgba(0, 0, 0, .5);
+  --f-shadow-md: var(--shadow);
+}
+
+[data-theme="light"] {
+  --f-bg: var(--bg);
+  --f-surface: var(--panel);
+  --f-surface-2: var(--panel-raised);
+  --f-surface-3: color-mix(in oklab, var(--panel-raised) 88%, var(--ink));
+  --f-border: var(--hair);
+  --f-border-strong: var(--accent-dim);
+
+  --f-text: var(--ink);
+  --f-text-muted: var(--ink-dim);
+  --f-text-subtle: color-mix(in oklab, var(--ink-dim) 68%, var(--panel));
+  --f-text-inverse: var(--panel-raised);
+
+  --f-primary: var(--accent);
+  --f-primary-contrast: var(--panel-raised);
+  --f-accent: var(--glyph-ground);
+
+  --f-success: var(--ok);
+  --f-warning: var(--alert);
+  --f-danger: var(--danger);
+  --f-info: var(--accent);
+
+  --f-ring: var(--accent);
+  --f-shadow-sm: 0 1px 2px rgba(26, 34, 51, .12);
+  --f-shadow-md: var(--shadow);
+}

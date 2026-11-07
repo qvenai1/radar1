@@ -1,0 +1,16 @@
+[Unit]
+Description=Atheer RADAR military overlay collector (airplanes.live)
+After=default.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/gis-syr/Desktop/scraplan
+EnvironmentFile=/home/gis-syr/.config/opensky/env
+ExecStart=/home/gis-syr/Desktop/scraplan/.venv/bin/python tracker_airplanes.py \
+    --lamin 12.0 --lomin 24.0 --lamax 42.0 --lomax 63.5 --interval 30 \
+    --db-url ${OPENSKY_DB_URL}
+Restart=on-failure
+RestartSec=15
+
+[Install]
+WantedBy=default.target

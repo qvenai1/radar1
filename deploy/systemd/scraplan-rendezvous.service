@@ -1,0 +1,16 @@
+[Unit]
+Description=Atheer RADAR rendezvous detector (behavioural A2 — open-sea meetings)
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/gis-syr/Desktop/scraplan
+# DATABASE_URL lives in the git-ignored project .env (loaded via python-dotenv;
+# EnvironmentFile '-' also injects it). User-unit pattern: no network-online.target
+# (a SYSTEM target absent from the user session) — matches scraplan-maritime/gaps.
+EnvironmentFile=-/home/gis-syr/Desktop/scraplan/.env
+# Wait briefly for the DB (same nc probe as scraplan-maritime), then never block boot.
+ExecStartPre=/bin/sh -c 'for i in $(seq 1 30); do nc -z 127.0.0.1 5435 && exit 0; sleep 2; done; exit 0'
+# Idempotent recompute-and-replace: rebuilds the port/busy masks + re-detects all
+# open-sea rendezvous from current history and replaces the rendezvous rows in
+# maritime_events. Cheap (~2 s: SQL cell/time pre-filter, no all-pairs).
+ExecStart=/home/gis-syr/Desktop/scraplan/.venv/bin/python scripts/detect_rendezvous.py

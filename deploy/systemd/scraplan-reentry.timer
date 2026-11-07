@@ -1,0 +1,11 @@
+[Unit]
+Description=Daily satellite reentry (Space-Track TIP) pull, geo-linked to the AOI
+
+[Timer]
+# Once daily — decay/tip are ~1/day classes; polling more often gains nothing.
+OnCalendar=*-*-* 05:30:00
+# Power-loss resilient: a run missed while the box was off fires on next boot.
+Persistent=true
+
+[Install]
+WantedBy=timers.target

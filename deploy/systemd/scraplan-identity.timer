@@ -1,0 +1,13 @@
+[Unit]
+Description=Re-run identity-change detection every 30 minutes (re-flag/rename)
+
+[Timer]
+# Every 30 minutes — identity changes are rare and accumulate slowly; the detector
+# is idempotent (recompute-replace), so frequent runs only refresh.
+# Staggered off :00 (arch review finding 6) — offsets chosen clear of the mt-* family.
+OnCalendar=*:9/30
+# Power-loss resilient: a run missed while the box was off fires on next boot.
+Persistent=true
+
+[Install]
+WantedBy=timers.target

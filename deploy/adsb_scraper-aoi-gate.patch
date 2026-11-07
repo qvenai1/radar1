@@ -1,0 +1,244 @@
+# adsb_scraper — AOI sampling-frame gate on the StateVector time-series (DISK-2 step 2)
+#
+# WHY THIS PATCH LIVES IN THE scraplan REPO:
+#   ~/Desktop/plandata is NOT a git repository (no .git, not nested in one, and
+#   data_p1 alone is 43 GB) so the authorised 'one commit in plandata' could not be
+#   made. The change is applied and tested on disk; this patch is its reviewable,
+#   version-controlled record, kept in a repo this window owns.
+#
+# Apply/revert from /home/gis-syr/Desktop/plandata with:
+#   patch -p1 < deploy/adsb_scraper-aoi-gate.patch      # apply
+#   patch -p1 -R < deploy/adsb_scraper-aoi-gate.patch   # revert
+#
+# Effective date: 2026-07-29. The precise effective instant is the collector
+# restart recorded in docs/PROJECT_STATE.md §7 (ground-truth line).
+#
+# Gate: reuses the validator's existing ValidationFlag.OUTSIDE_AREA and the same
+# cfg.area.persist_out_of_area override the Accumulator has always applied to the
+# ICAO catalogue. Nothing is recomputed; only the place it takes effect is new.
+# Tests: 6 added in adsb_scraper/tests/test_statevector.py, driven through the REAL
+# committed AOI asset. Suite 200 passed; ruff + mypy clean.
+
+--- a/adsb_scraper/statevector.py
++++ b/adsb_scraper/statevector.py
+@@ -125,8 +125,30 @@
+ 
+     Reuses :class:`~adsb_scraper.persistence.DurableJsonlWriter` for identical
+     buffering/fsync/crash-repair discipline, and writes one line per eligible
+-    aircraft per cycle. Ineligible observations (OpenSky-sourced, or lacking a
+-    valid ICAO) are skipped, never written.
++    aircraft per cycle. Ineligible observations (OpenSky-sourced, lacking a
++    valid ICAO, or OUTSIDE the area of interest) are skipped, never written.
++
++    SAMPLING FRAME, NOT A CENSUS. The time-series is bounded to the seven-country
++    neighborhood (``AOI_COUNTRIES``) plus the ``--area-buffer-km`` border buffer:
++    the same frame the ICAO catalogue has always used. Measured before this gate
++    existed, **~95 % of every line written here was global traffic** far outside
++    the neighborhood (96.65 % with no AOI country, 94.53 % beyond 1000 km, out to
++    8586 km) — the archive grew ~9.4 GB/day to record aircraft the project does
++    not study.
++
++    The area decision itself is NOT made here and is not recomputed: the
++    validator stamps ``ValidationFlag.OUTSIDE_AREA`` once per record
++    (``validation.py``), and this gate reads the same ``record.outside_area``
++    property, under the same ``persist_out_of_area`` override, that the
++    accumulator has always applied to the catalogue. Only the *place* it takes
++    effect is new — previously the time-series was written before that gate ran,
++    which is why a scraper with a correct AOI still produced a global archive.
++
++    NEAR records are kept: they carry ``NEAR_BORDER``, not ``OUTSIDE_AREA``, and
++    the neighborhood is the point. Positionless records are unclassified and so
++    are also kept — identical to the catalogue's behaviour.
++
++    Set ``persist_out_of_area=True`` to restore the unbounded global time-series.
+     """
+ 
+     def __init__(
+@@ -136,8 +158,11 @@
+         batch_size: int = 100,
+         flush_interval: float = 5.0,
+         fsync: bool = True,
++        persist_out_of_area: bool = False,
+         clock: Clock | None = None,
+     ) -> None:
++        self._persist_out_of_area = persist_out_of_area
++        self._skipped_out_of_area = 0
+         self._writer = DurableJsonlWriter(
+             path,
+             name="state-vectors",
+@@ -174,10 +199,21 @@
+             # NEVER emit OpenSky-sourced observations into the adsbexchange feed.
+             if not is_adsbexchange_source(record.source):
+                 continue
++            # Sampling frame: the same OUTSIDE_AREA policy the accumulator applies
++            # to the catalogue, applied here BEFORE the line is written. Not a
++            # recomputation — the validator already stamped the flag.
++            if record.outside_area and not self._persist_out_of_area:
++                self._skipped_out_of_area += 1
++                continue
+             await self._writer.write_line(to_state_vector(record, snapshot_time))
+             written += 1
+         return written
+ 
+     @property
++    def skipped_out_of_area(self) -> int:
++        """Records withheld from the time-series by the sampling frame."""
++        return self._skipped_out_of_area
++
++    @property
+     def total_written(self) -> int:
+         return self._writer.total_written
+--- a/adsb_scraper/main.py
++++ b/adsb_scraper/main.py
+@@ -122,6 +122,9 @@
+                     batch_size=cfg.persistence.batch_size,
+                     flush_interval=cfg.persistence.flush_interval,
+                     fsync=cfg.persistence.fsync,
++                    # Same sampling frame as the catalogue (Accumulator above):
++                    # one policy, one config field, two consumers.
++                    persist_out_of_area=cfg.area.persist_out_of_area,
+                     clock=clock,
+                 )
+             )
+--- a/adsb_scraper/tests/test_statevector.py
++++ b/adsb_scraper/tests/test_statevector.py
+@@ -17,7 +17,7 @@
+     InterceptionStrategy,
+     OpenSkyRestStrategy,
+ )
+-from adsb_scraper.models import GeoBounds
++from adsb_scraper.models import Aircraft, GeoBounds
+ from adsb_scraper.persistence import scan_jsonl
+ from adsb_scraper.statevector import (
+     ADSBEXCHANGE_SOURCES,
+@@ -26,9 +26,15 @@
+     is_adsbexchange_source,
+     to_state_vector,
+ )
+-from adsb_scraper.validation import PositionQuality, ValidatedRecord, ValidationFlag
++from adsb_scraper.validation import (
++    AircraftRecordValidator,
++    PositionQuality,
++    ValidatedRecord,
++    ValidationConfig,
++    ValidationFlag,
++)
+ 
+-from .conftest import FakeBrowser, FakeSink, FrozenClock
++from .conftest import FakeBrowser, FakeSink, FrozenClock, make_area_of_interest
+ 
+ 
+ def _vr(
+@@ -280,3 +286,112 @@
+         await sink.write_snapshot([_vr("bbbbbb")], 1_700_000_015)
+     assert scan_jsonl(path) == (2, 0)  # partial repaired, both good lines intact
+ 
++
++# --------------------------------------------------------------------------- #
++# Sampling frame — the time-series is bounded to the AOI (DISK-2)
++#
++# These go through the REAL validator and the REAL committed AOI asset, so the
++# INSIDE / NEAR / OUTSIDE decision is the production one, never a hand-set flag.
++# Reference points are the same three test_validation.py uses.
++# --------------------------------------------------------------------------- #
++
++_FRAME_AOI = make_area_of_interest(buffer_km=50.0)
++_DAMASCUS = (33.5123, 36.2912)   # INSIDE Syria
++_NEAR_LEBANON = (33.90, 35.10)   # ~34 km off the coast -> NEAR
++_CAIRO = (30.04, 31.24)          # far OUTSIDE, but inside the fetch envelope
++
++
++def _frame_validator() -> AircraftRecordValidator:
++    return AircraftRecordValidator(area=_FRAME_AOI, config=ValidationConfig())
++
++
++def _validated_at(icao: str, point: tuple[float, float] | None) -> ValidatedRecord:
++    """Validate one aircraft at a known position through the production path."""
++    kwargs: dict[str, Any] = {"icao": icao}
++    if point is not None:
++        kwargs["latitude"], kwargs["longitude"] = point
++    return _frame_validator().validate(Aircraft(**kwargs), source="interception")
++
++
++def test_real_aoi_classifies_the_three_reference_points() -> None:
++    """Guard the premise: if these drift, the frame tests below mean nothing."""
++    inside = _validated_at("a00001", _DAMASCUS)
++    near = _validated_at("a00002", _NEAR_LEBANON)
++    outside = _validated_at("a00003", _CAIRO)
++    assert inside.country == "Syria" and not inside.outside_area
++    assert near.is_near and not near.outside_area
++    assert outside.outside_area and outside.country is None
++
++
++async def test_outside_area_is_never_written_to_the_time_series(tmp_path: Path) -> None:
++    path = tmp_path / "state_vectors.jsonl"
++    async with StateVectorSink(path, batch_size=1, clock=FrozenClock()) as sink:
++        written = await sink.write_snapshot(
++            [
++                _validated_at("a00001", _DAMASCUS),
++                _validated_at("a00002", _NEAR_LEBANON),
++                _validated_at("a00003", _CAIRO),
++            ],
++            1_700_000_000,
++        )
++        assert written == 2, "INSIDE + NEAR are written, OUTSIDE is not"
++        assert sink.skipped_out_of_area == 1
++    assert scan_jsonl(path) == (2, 0)
++    icaos = {json.loads(line)["icao24"] for line in path.read_text().splitlines()}
++    assert icaos == {"a00001", "a00002"}, "Cairo must be absent"
++
++
++async def test_near_border_is_kept_the_neighborhood_is_the_point(tmp_path: Path) -> None:
++    path = tmp_path / "state_vectors.jsonl"
++    async with StateVectorSink(path, batch_size=1, clock=FrozenClock()) as sink:
++        written = await sink.write_snapshot([_validated_at("a00002", _NEAR_LEBANON)], 1_700_000_000)
++    assert written == 1
++    assert scan_jsonl(path) == (1, 0)
++
++
++async def test_positionless_record_is_kept_unclassified_is_not_outside(tmp_path: Path) -> None:
++    """Parity with the catalogue: no position means unclassified, not excluded."""
++    path = tmp_path / "state_vectors.jsonl"
++    rec = _validated_at("a00004", None)
++    assert not rec.outside_area and not rec.has_position
++    async with StateVectorSink(path, batch_size=1, clock=FrozenClock()) as sink:
++        written = await sink.write_snapshot([rec], 1_700_000_000)
++    assert written == 1
++
++
++async def test_persist_out_of_area_restores_the_global_time_series(tmp_path: Path) -> None:
++    """The override is the documented escape hatch, and it must still work."""
++    path = tmp_path / "state_vectors.jsonl"
++    async with StateVectorSink(
++        path, batch_size=1, persist_out_of_area=True, clock=FrozenClock()
++    ) as sink:
++        written = await sink.write_snapshot(
++            [_validated_at("a00001", _DAMASCUS), _validated_at("a00003", _CAIRO)],
++            1_700_000_000,
++        )
++        assert written == 2
++        assert sink.skipped_out_of_area == 0
++    assert scan_jsonl(path) == (2, 0)
++
++
++async def test_frame_matches_the_catalogue_policy(tmp_path: Path) -> None:
++    """The sink and the accumulator must agree on the SAME record set.
++
++    This is the invariant that makes the change a MOVE of one policy, not a
++    second policy that can drift away from the first.
++    """
++    batch = [
++        _validated_at("a00001", _DAMASCUS),
++        _validated_at("a00002", _NEAR_LEBANON),
++        _validated_at("a00003", _CAIRO),
++    ]
++    cat_sink = FakeSink()
++    accumulator = Accumulator(cat_sink, set(), clock=FrozenClock())
++    result = await accumulator.process(batch)
++
++    path = tmp_path / "state_vectors.jsonl"
++    async with StateVectorSink(path, batch_size=1, clock=FrozenClock()) as sink:
++        written = await sink.write_snapshot(batch, 1_700_000_000)
++
++    assert result.skipped_out_of_area == sink.skipped_out_of_area == 1
++    assert result.added == written == 2

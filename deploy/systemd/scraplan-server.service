@@ -1,0 +1,16 @@
+[Unit]
+Description=Atheer RADAR API server (REST v1 + WS + SPA)
+After=default.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/gis-syr/Desktop/scraplan
+# wait for TimescaleDB (container restarts on its own via docker policy);
+# the server starts fine without it, but waiting avoids a noisy first minute
+ExecStartPre=/bin/sh -c 'for i in $(seq 1 30); do nc -z 127.0.0.1 5435 && exit 0; sleep 2; done; exit 0'
+ExecStart=/home/gis-syr/Desktop/scraplan/.venv/bin/python server.py --host 0.0.0.0 --port 8000
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target

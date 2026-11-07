@@ -1,0 +1,199 @@
+/*
+ * FOREST COMPONENTS — the system's component grammar, inside the layer it was reserved
+ * (THEME-3 commits 3+). Filled one component per commit; this file starts with BADGE.
+ *
+ * ⛔ EVERYTHING HERE IS IN `@layer forest`, declared at the top of forest.css. That makes it
+ * lose to every UNLAYERED project rule at any specificity — which is the point. The project
+ * keeps whatever it has a MEASURED reason to keep just by saying so in app.css, and the
+ * system supplies the rest without an arms race of selectors.
+ *
+ * ⛔ WHAT IS NOT COPIED FROM THE SHIPPED FILE, and why each one:
+ *
+ *  1. `* { box-sizing }` and the `body { … }` reset. The project sets both already, and
+ *     Forest's body rule names `--font-sans`, which THEME-2 deliberately did not import —
+ *     it would displace Qomra (THEME-1) with a font that is not bundled.
+ *  2. The `.badge--*` tone variants. They resolve against `--success-soft`, `--danger-text`,
+ *     `--accent-soft` and friends, none of which exist in this project — THEME-2 prefixed
+ *     the whole semantic vocabulary `--f-*` precisely so no project token could be shadowed.
+ *     Shipped as-is they would be dead rules that silently do nothing, and rebound to the
+ *     project's tokens they would repaint severity, which is THEME-2's distribution and
+ *     frozen. Tone stays where it already is: `--sev-*`, in app.css, unchanged.
+ *  3. ⛔ `.badge .dot` — REFUSED, and this is the one place the system is overruled rather
+ *     than adapted. Forest's badge carries a 7px `background: currentColor` circle beside
+ *     its text; that is a colour-only channel, and UI-FRESH's standing rule on this project
+ *     is that the WORD carries the judgement and colour never carries it alone. Adding the
+ *     dot would put a second, weaker signal next to the one that actually works, and a
+ *     colour-blind reader would gain nothing from it. The commitment wins; the system adapts.
+ *     ⚠ `.dot` is ALSO already a project class — the feed-status indicator (`.dot.ws` /
+ *     `.polling` / `.error` / `.frozen` / `.computed`, 8px, six rules in app.css). Forest
+ *     scopes its dot under `.badge`, so the two do not collide TODAY; they would the moment
+ *     a status dot were ever placed inside a badge. THEME-pre named `.stat` as the only
+ *     class collision — this is a second one, latent rather than active.
+ */
+
+@layer forest {
+  /* ---------------- BADGE ----------------
+   * Forest's declarations, verbatim in value, against tokens forest.css already defines
+   * (--fs-xs · --fw-semibold · --r-pill). The project's five badge families now compose
+   * this for their shape and keep only colour, tone and the one semantic border style.
+   *
+   * ⚠ THE SCALE IS A REAL, MEASURED CHANGE and it is taken deliberately, not absorbed:
+   * the badge box goes 49×21 → 70×25.6, a result card 199 → 203.6px, and the lead panel's
+   * worst country 2,851 → 2,897px. That leaves 145px under DASH-2d″'s 3,042px gate, so the
+   * system's own density is affordable here. Had it not been, the fix would have been
+   * structural — a lower cap or a shorter card — never a tolerance. */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-semibold);
+    padding: 4px 10px;
+    border-radius: var(--r-pill);
+    line-height: 1.3;
+    border: 1px solid transparent;
+  }
+
+  /* ---------------- CARD ----------------
+   * Bound to the `--f-*` bridge THEME-2 built for exactly this: Forest's own rule names
+   * `--surface` / `--border` / `--shadow-sm`, none of which exist in this project, so
+   * copied verbatim it would be three invalid declarations that quietly do nothing.
+   * `--f-surface` and `--f-border` resolve to the project's own `--panel` / `--hair`, so
+   * background and border colour come out byte-identical to what `.result-card` set.
+   *
+   * ⚠ TWO REAL DIFFERENCES, both non-layout, both taken: the radius goes --radius-sm 12px →
+   * --r-lg 14px, and the card gains Forest's `--f-shadow-sm` where it previously had none.
+   * Neither moves a box, so no length or fold budget is touched — measured, not assumed.
+   *
+   * ⛔ `.card__body` / `__header` / `__footer` are NOT copied. This project's card is a
+   * single body with its own padding; the three sub-parts have no element to attach to, and
+   * a rule with no consumer is the dead code UI-3 forbids. They arrive when a card needs them.
+   *
+   * ⚠ `overflow: hidden` is Forest's and is kept — borders are outside the padding box and
+   * are not clipped by it, so the severity channel and the selected ring both survive it. */
+  .card {
+    background: var(--f-surface);
+    border: 1px solid var(--f-border);
+    border-radius: var(--r-lg);
+    box-shadow: var(--f-shadow-sm);
+    overflow: hidden;
+  }
+
+  /* ---------------- TABLE ----------------
+   * The project has ONE table system — `.contact-list` wrapping a plain <table> — and six
+   * components render into it (DataTable · IdentityChanges · GapCandidates · Rendezvous ·
+   * AirportSearchDetail · ReentryWatch). All six now compose Forest's pair.
+   *
+   * ⛔ `.table .num` is NOT copied: nothing in this project uses a `.num` cell class, and the
+   * rule names `--font-mono` (IBM Plex Mono), which THEME-2 deliberately did not import
+   * because it is not bundled and would displace JetBrains at 23 sites. A dead rule pointing
+   * at an unimported font is two mistakes in one line.
+   *
+   * ⛔ `.table-wrap`'s `overflow: hidden` is DELIBERATELY OVERRIDDEN in app.css, not accepted.
+   * Forest clips so rows cannot poke out of the rounded corners; this list SCROLLS — its
+   * cells are `white-space: nowrap`, so clipping the x axis would put the tail of a long row
+   * permanently out of reach. `overflow: auto` gives the same corner clipping and keeps the
+   * data reachable. The one place Forest's value would have cost information rather than
+   * pixels. */
+  .table-wrap {
+    overflow: hidden;
+    border: 1px solid var(--f-border);
+    border-radius: var(--r-lg);
+    background: var(--f-surface);
+  }
+  .table { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); }
+  .table thead th {
+    text-align: start;
+    font-weight: var(--fw-semibold);
+    color: var(--f-text-muted);
+    padding: var(--sp-3) var(--sp-5);
+    background: var(--f-surface-2);
+    border-bottom: 1px solid var(--f-border);
+    font-size: var(--fs-xs);
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    white-space: nowrap;
+  }
+  .table tbody td {
+    padding: var(--sp-4) var(--sp-5);
+    border-bottom: 1px solid var(--f-border);
+    color: var(--f-text);
+    vertical-align: middle;
+  }
+  .table tbody tr:last-child td { border-bottom: 0; }
+  .table tbody tr { transition: background var(--dur) var(--ease); }
+  .table tbody tr:hover { background: var(--f-surface-2); }
+
+  /* ---------------- SEGMENTED CONTROL ----------------
+   * ⚠ THIS IS NOT A DENSITY DIFFERENCE, IT IS A DIFFERENT IDIOM, and that is why it is worth
+   * taking. The project's `.seg` is a JOINED BUTTON GROUP: every button carries its own
+   * border, they overlap by -1px, and only the two ends are rounded. Forest's `.segment` is a
+   * TRACK: the container carries the border and a recessed surface, the buttons are
+   * borderless, and the selected one is a raised pill sitting on it.
+   *
+   * ✅ It is also the better signal, by this project's own rule. The project marked the
+   * selected segment with `border-color: var(--accent)` + `color: var(--accent)` — COLOUR
+   * ALONE, twice. Forest adds ELEVATION: a lifted surface and a shadow. The global
+   * `button[aria-pressed="true"]` accent rule is unlayered and still applies, so the selected
+   * segment now reads as accent text ON a raised pill — colour plus a second channel that
+   * survives greyscale, which is what UI-FRESH asks for everywhere else.
+   *
+   * ⛔ `.segment button { border: 0 }` has to be RESTATED unlayered in app.css: this project
+   * has a global `button { border: 1px solid var(--hair) }` at specificity 0-0-1, and an
+   * unlayered rule beats a layered one however specific — the same mechanism that protects
+   * the project everywhere else works against it here, so the borderless button has to be
+   * asked for in the project's own layer. Density is kept there too. */
+  .segment {
+    display: inline-flex;
+    background: var(--f-surface-2);
+    border: 1px solid var(--f-border);
+    border-radius: var(--r-md);
+    padding: 3px;
+    gap: 2px;
+  }
+  .segment button {
+    appearance: none;
+    border: 0;
+    background: none;
+    font-family: inherit;
+    font-weight: var(--fw-semibold);
+    color: var(--f-text-muted);
+    border-radius: calc(var(--r-md) - 3px);
+    cursor: pointer;
+    transition: all var(--dur) var(--ease);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .segment button[aria-pressed="true"] {
+    background: var(--f-surface);
+    box-shadow: var(--f-shadow-sm);
+  }
+
+  /* ---------------- INPUT ----------------
+   * ⛔ ONLY `.input`. `.select`, `.textarea`, `.input-group`, `.field`, `.label`, `.hint`,
+   * `.error-text`, `.check` and `.switch` are not copied: measured, this project renders SIX
+   * <input> elements and ZERO <select> or <textarea>. Rules with no consumer are dead code.
+   *
+   * ⛔ `.input:focus` IS REFUSED — the second and last place the system is overruled. Forest
+   * rings the field on `:focus`, which fires on a mouse click too; this project rings on
+   * `:focus-visible` (a global rule, `--focus-ring`), which is the affordance a keyboard user
+   * needs and the noise a mouse user does not. Taking Forest's would be a regression dressed
+   * as a migration. `:disabled` is taken — the project had no disabled state for a field at all.
+   *
+   * ⚠ THE BORDER IS THE ONE REAL DIFFERENCE, and it is Forest's point: 1px `--hair` → 1.5px
+   * `--f-border-strong`. A field stops reading as a hairline box and starts reading as
+   * something you can type in. `--f-border-strong` resolves to `--accent-dim`, so the field
+   * picks up a dim warm edge — a visible change, reported, and not a rebinding of `--accent`
+   * itself (which stays the gold that paints an info badge). */
+  .input {
+    font-family: inherit;
+    width: 100%;
+    border: 1.5px solid var(--f-border-strong);
+    border-radius: var(--r-md);
+    transition: border-color var(--dur) var(--ease),
+                box-shadow var(--dur) var(--ease),
+                background var(--dur) var(--ease);
+  }
+  .input:disabled { background: var(--f-surface-2); color: var(--f-text-subtle); cursor: not-allowed; }
+}

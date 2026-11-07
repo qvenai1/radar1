@@ -1,0 +1,26 @@
+[Unit]
+Description=Atheer RADAR GNSS position-quality tagger (per-fix plausibility; upstream of A1/A2/A3)
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/gis-syr/Desktop/scraplan
+# DATABASE_URL lives in the git-ignored project .env (loaded via python-dotenv;
+# EnvironmentFile '-' also injects it so the run does not depend on dotenv's cwd).
+# (User-unit pattern: matches scraplan-gaps/rendezvous/identity — no
+# network-online.target, which is a SYSTEM target absent from the user session.)
+EnvironmentFile=-/home/gis-syr/Desktop/scraplan/.env
+# Wait briefly for the DB (same nc probe as the sibling detectors), then never block boot.
+ExecStartPre=/bin/sh -c 'for i in $(seq 1 30); do nc -z 127.0.0.1 5435 && exit 0; sleep 2; done; exit 0'
+# INCREMENTAL by idempotent recompute over a short overlap window. --since-minutes 45
+# re-tags fixes from the last 45 minutes (recompute-and-replace on the natural key), so
+# newly-ingested rows get stamped and a window-edge teleport_return resolves the run
+# after its successor fix is ingested. 45 min = 3x the 15-min timer cadence (covers the
+# collector's ingest lag plus one overlap fix per MMSI) and is far inside the 7-day
+# compression margin, so an incremental run only ever touches recent UNCOMPRESSED chunks
+# and never hits max_tuples_decompressed_per_dml_transaction. A one-off FULL historical
+# (re)tag is a MANUAL run with --decompress-chunks (see the runner docstring and the
+# ops note); the timer never does full history.
+# ORDERING: quality tagging is conceptually UPSTREAM of the A1/A2/A3 detectors, but no
+# After=/ordering is enforced yet — G3 decides timer-phase alignment once the detectors
+# and coverage mask consume these columns.
+ExecStart=/home/gis-syr/Desktop/scraplan/.venv/bin/python scripts/backfill_position_quality.py --since-minutes 45

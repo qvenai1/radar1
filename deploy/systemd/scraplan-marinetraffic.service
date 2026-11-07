@@ -1,0 +1,41 @@
+[Unit]
+Description=Atheer RADAR MarineTraffic collector (tails mtscraper positions.jsonl)
+After=default.target
+# Deliberately NOT After=mtscraper.service. mtscraper is an isolated sibling
+# project and the only coupling is its output file; the adapter already waits
+# for a missing file to appear, so ordering these would buy nothing and would
+# tie two projects that are kept independent on purpose.
+# Also NOT network-online.target — that target does not exist in the user
+# manager (LoadState=not-found), so depending on it is silently inert.
+
+[Service]
+Type=simple
+WorkingDirectory=/home/gis-syr/Desktop/scraplan
+# DATABASE_URL lives in the git-ignored project .env. tracker_marinetraffic.py
+# loads it via python-dotenv, but the LIVE path resolves the DB from
+# $OPENSKY_DB_URL only (unlike backfill/correlate, which also fall back to
+# DATABASE_URL) — so --db-url is passed explicitly below, exactly as the AIS
+# collector does. Without it the collector archives but never mirrors.
+EnvironmentFile=-/home/gis-syr/Desktop/scraplan/.env
+# DB being down never stops the collector (the JSONL archive is ground truth) —
+# the wait just avoids pointless mirror errors right after boot.
+ExecStartPre=/bin/sh -c 'for i in $(seq 1 30); do nc -z 127.0.0.1 5435 && exit 0; sleep 2; done; exit 0'
+# Tails the eastern-Mediterranean mtscraper run. The path is absolute rather
+# than the tracker's relative ../mtscraper/mt_output default so the unit does
+# not silently follow a change of working directory; it is the one line to edit
+# if the archive moves to another disk.
+#
+# NOT --from-start: the adapter primes at EOF and does not persist its byte
+# offset, so --from-start would re-ingest the whole multi-GB archive on EVERY
+# restart. History (and any gap while this service was down) is covered by the
+# idempotent `backfill` subcommand instead:
+#     python tracker_marinetraffic.py backfill --archive <mt_output>
+ExecStart=/home/gis-syr/Desktop/scraplan/.venv/bin/python tracker_marinetraffic.py \
+    --mt-output /home/gis-syr/Desktop/scraplan/maritime_source_marine/mt_output \
+    --interval 30 --output marinetraffic_output \
+    --db-url ${DATABASE_URL}
+Restart=on-failure
+RestartSec=15
+
+[Install]
+WantedBy=default.target

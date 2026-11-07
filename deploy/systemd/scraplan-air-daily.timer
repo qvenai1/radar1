@@ -1,0 +1,21 @@
+[Unit]
+Description=Summarise yesterday's per-country air presence (daily, DASH-BOARD-3b)
+
+[Timer]
+# ⛔ 01:37 LOCAL, and every part of that is chosen against something measured:
+#   · it is AFTER 20:00 local, so the UTC day it summarises (--yesterday) is complete;
+#   · it avoids 03:00 (scraplan-backup) and 04:15 (scraplan-offsite) — the two heavy
+#     disk jobs on a shared spindle;
+#   · it avoids 00:05 (rotate), 00:20/06:20 (satellites) and 05:30 (reentry);
+#   · and :37 lands on no detector minute — gaps/quality run :00/:15/:30/:45,
+#     rendezvous/zone-dwell :00/:20/:40, gnss :10/:30/:50, identity :00/:30.
+# So this job never contends with a collector, a detector or a backup.
+OnCalendar=*-*-* 01:37:00
+# Power-loss resilient: a run missed while the box was off fires on next boot — which
+# matters here more than for the detectors, because this box is deliberately switched off
+# (measured in GNSS-REVIVE: four multi-day clean shutdowns) and a skipped night would
+# otherwise leave a permanent hole in the trend.
+Persistent=true
+
+[Install]
+WantedBy=timers.target

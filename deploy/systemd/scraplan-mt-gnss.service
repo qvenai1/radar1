@@ -1,0 +1,18 @@
+[Unit]
+Description=Atheer RADAR MT GNSS-anomaly detector (MT-DETECT-2) — MarineTraffic track
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/gis-syr/Desktop/scraplan
+EnvironmentFile=-/home/gis-syr/Desktop/scraplan/.env
+ExecStartPre=/bin/sh -c 'for i in $(seq 1 30); do nc -z 127.0.0.1 5435 && exit 0; sleep 2; done; exit 0'
+
+# DOWNSTREAM of scraplan-mt-quality: reads position_quality/implied_speed_kn, which that
+# unit writes. Ordering is by CLOCK OFFSET rather than After=, matching how the AIS
+# detectors already relate to their tagger — the runs are idempotent, so a race costs a
+# recompute and never a wrong verdict.
+#
+# ⚠ NO --since: this detector is full-replace by design and its DELETE is scoped to its own
+# source, so a run rebuilds the whole MarineTraffic set. Measured cost: ~5 s over 2.9M MT
+# rows, which is why a window would add risk (a narrower delete than scan) for no gain.
+ExecStart=/home/gis-syr/Desktop/scraplan/.venv/bin/python scripts/detect_gnss_anomaly.py --source marinetraffic

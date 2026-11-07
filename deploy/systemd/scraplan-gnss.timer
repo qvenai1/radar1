@@ -1,0 +1,24 @@
+[Unit]
+Description=Re-run GNSS-anomaly episode detection every 20 minutes (spoofing/jamming episodes)
+
+[Timer]
+# Every 20 minutes — the cadence of its nearest siblings (rendezvous, zone-dwell), and the
+# detector is idempotent (recompute-replace), so frequent runs only refresh; they never
+# duplicate.
+#
+# ⛔ OFFSET BY 10 MINUTES ON PURPOSE, and the offset is the point. This detector AGGREGATES
+# the per-fix implausible verdicts that scraplan-quality writes, so it must not race the run
+# that produces its input. quality/gaps fire at :00/:15/:30/:45 and rendezvous/zone-dwell at
+# :00/:20/:40; :10/:30/:50 lands clear of the first and never stacks four detectors on one
+# minute of a shared disk.
+#
+# ⚠ Before this timer existed the layer was not merely stale, it was DEAD: last computed
+# 2026-07-21 11:35:03Z — 13 d 17 h — with its newest episode dated 2026-07-19, while a dry run
+# at deployment derived 2,091 episodes against the 805 stored. TIMERS-1 had classified it
+# "on demand by design"; that classification was wrong (see PROJECT_STATE §3).
+OnCalendar=*:10/20
+# Power-loss resilient: a run missed while the box was off fires on next boot.
+Persistent=true
+
+[Install]
+WantedBy=timers.target

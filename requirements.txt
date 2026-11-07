@@ -1,0 +1,37 @@
+# Collector
+aiohttp>=3.14
+aiofiles>=25.1
+
+# Backend (API + ingestion)
+fastapi>=0.139
+uvicorn>=0.50
+websockets>=15.0        # WS protocol support for uvicorn; AISStream client
+asyncpg>=0.30
+python-dotenv>=1.0
+
+# Satellite orbit derivation (backend/orbit_derive.py) — the reference SGP4
+# implementation (MIT, pure-python with optional C acceleration, well-typed).
+# Used to derive orbit_class + apogee/perigee/period from TLEs (Sat-Orbit layer).
+sgp4>=2.23
+
+# Shared geo classification (backend/geo_area.py) — the source-neutral AOI
+# classifier used at ingest for every feed. AEQD border buffer via pyproj;
+# prepared polygons via shapely. Both ship py.typed (no stub override needed).
+# Needed by the ingestion/collector processes, not the read-only API server.
+shapely>=2.0
+pyproj>=3.6
+
+# Maritime AIS layer (tracker_maritime.py). aiohttp/websockets already above.
+# Global Fishing Watch official client — needed by the GFW adapter (satellite
+# AIS gap / dark-vessel detection) when enabled via $GFW_API_TOKEN. Lazily
+# imported, so the layer still runs if it is absent (adapter stays disabled).
+gfw-api-python-client>=1.4   # import name: gfwapiclient
+# Land/sea mask (bundled ~1.8km grid) — the dark-vessels endpoint drops on-land
+# (spoofed/bad) GFW positions so the map shows vessels at sea only.
+global-land-mask>=1.0
+
+# Unified collectors (mtscraper & plandata/adsb_scraper)
+playwright>=1.61
+zstandard>=0.22
+psutil>=5.9
+

@@ -1,0 +1,6 @@
+[Unit]
+Description=Atheer RADAR archive rotation
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sh /home/gis-syr/Desktop/scraplan/scripts/rotate_archive.sh

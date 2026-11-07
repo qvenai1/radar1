@@ -1,0 +1,25 @@
+[Unit]
+Description=Send Atheer RADAR updates every 2 minutes (high-severity latency bound)
+
+[Timer]
+# EVERY 2 MINUTES, and the number is a latency budget rather than a poll rate.
+#
+# The tick is what bounds how late a HIGH-severity alert can be: an emergency squawk is
+# delivered at most one tick after it enters the feed. 2 minutes is the honest ceiling to
+# quote for that, and the cost of paying it is small and measured — GET /api/v1/alerts
+# answers in 0.125 s and the runner sends nothing at all when nothing changed (measured:
+# an unchanged feed produces 0 messages, by construction of the dedup ledger).
+#
+# It also sits at the right relation to the sources: military.json goes stale after 120 s
+# (MILITARY_STALE_S), so a slower tick would start missing presence entirely, while a
+# faster one would only re-read a snapshot that has not moved.
+OnCalendar=*:0/2
+
+# A run missed while the box was off fires once on next boot. Deliberately harmless: the
+# ledger is keyed by what the feed CONTAINS, not by when it was read, so a late tick sends
+# what is true now rather than replaying a backlog. Anything that came and went during the
+# outage is not resurrected — the following digest reports how many such keys ended.
+Persistent=true
+
+[Install]
+WantedBy=timers.target

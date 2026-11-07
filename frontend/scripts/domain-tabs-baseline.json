@@ -1,0 +1,518 @@
+{
+  "1440/air": {
+    "lead": {
+      "x": 1084,
+      "y": 79,
+      "w": 340
+    },
+    "map": {
+      "x": 0,
+      "y": 0,
+      "w": 1440,
+      "h": 900
+    },
+    "grids": [
+      "card-grid|314px|12px",
+      "dash-stats triage|153px 153px|8px"
+    ],
+    "children": [
+      "country-card|0px|8px|314"
+    ],
+    "tile": {
+      "w": 153,
+      "pad": "7px 11px"
+    },
+    "satBtn": {
+      "pad": "3px 9px",
+      "fs": "11px",
+      "h": 23
+    },
+    "ink": {
+      "root": {
+        "--bg": "#002623",
+        "--panel": "#03342e",
+        "--panel-raised": "#054239",
+        "--panel-glass": "rgba(3, 52, 46, .82)",
+        "--hair": "rgba(14, 76, 65, .55)",
+        "--scrim": "rgba(0, 26, 24, .8)"
+      },
+      "body": {
+        "bg": "rgb(0, 38, 35)",
+        "bi": "radial-gradient(60% 50% at 18% 12%, rgba(66, 129, 119, 0.14) 0%, rgba(0, 0, 0, 0) 100%), radial-gradient(50% 40% at 83% 9%, rgba(217, 171, 74, 0.07) 0%, rgba(0, 0, 0, 0) 100%), linear-gradient(165deg, rgb(0, 26, 24) 0%, rgb(0, 38, 35) 40%, rgb(3, 52, 46) 100%), none",
+        "bc": "rgb(237, 235, 224)",
+        "fg": "rgb(237, 235, 224)"
+      },
+      "lead": {
+        "bg": "rgba(3, 52, 46, 0.82)",
+        "bi": "none",
+        "bc": "rgba(14, 76, 65, 0.55)",
+        "fg": "rgb(237, 235, 224)"
+      },
+      "tile": {
+        "bg": "rgb(5, 66, 57)",
+        "bi": "none",
+        "bc": "rgba(14, 76, 65, 0.55)",
+        "fg": "rgb(237, 235, 224)"
+      },
+      "card": {
+        "bg": "rgb(3, 52, 46)",
+        "bi": "none",
+        "bc": "rgba(14, 76, 65, 0.55)",
+        "fg": "rgb(237, 235, 224)"
+      },
+      "secondary": {
+        "bg": "rgb(3, 52, 46)",
+        "bi": "none",
+        "bc": "rgba(14, 76, 65, 0.55)",
+        "fg": "rgb(156, 195, 187)"
+      }
+    },
+    "tileText": [
+      {
+        "label": "يستدعي الانتباه",
+        "hasN": true,
+        "kids": 2
+      },
+      {
+        "label": "قيد المراجعة",
+        "hasN": true,
+        "kids": 2
+      },
+      {
+        "label": "إجمالي التنبيهات",
+        "hasN": true,
+        "kids": 3
+      }
+    ]
+  },
+  "1440/sea": {
+    "lead": {
+      "x": 1084,
+      "y": 79,
+      "w": 340
+    },
+    "map": {
+      "x": 0,
+      "y": 0,
+      "w": 1440,
+      "h": 900
+    },
+    "grids": [
+      "card-grid|314px|12px",
+      "dash-stats triage|153px 153px|8px"
+    ],
+    "children": [
+      "country-card|0px|8px|314"
+    ],
+    "tile": {
+      "w": 153,
+      "pad": "7px 11px"
+    },
+    "satBtn": {
+      "pad": "3px 9px",
+      "fs": "11px",
+      "h": 23
+    },
+    "ink": {
+      "root": {
+        "--bg": "#002623",
+        "--panel": "#03342e",
+        "--panel-raised": "#054239",
+        "--panel-glass": "rgba(3, 52, 46, .82)",
+        "--hair": "rgba(14, 76, 65, .55)",
+        "--scrim": "rgba(0, 26, 24, .8)"
+      },
+      "body": {
+        "bg": "rgb(0, 38, 35)",
+        "bi": "radial-gradient(60% 50% at 18% 12%, rgba(66, 129, 119, 0.14) 0%, rgba(0, 0, 0, 0) 100%), radial-gradient(50% 40% at 83% 9%, rgba(217, 171, 74, 0.07) 0%, rgba(0, 0, 0, 0) 100%), linear-gradient(165deg, rgb(0, 26, 24) 0%, rgb(0, 38, 35) 40%, rgb(3, 52, 46) 100%), none",
+        "bc": "rgb(237, 235, 224)",
+        "fg": "rgb(237, 235, 224)"
+      },
+      "lead": {
+        "bg": "rgba(3, 52, 46, 0.82)",
+        "bi": "none",
+        "bc": "rgba(14, 76, 65, 0.55)",
+        "fg": "rgb(237, 235, 224)"
+      },
+      "tile": {
+        "bg": "rgb(5, 66, 57)",
+        "bi": "none",
+        "bc": "rgba(14, 76, 65, 0.55)",
+        "fg": "rgb(237, 235, 224)"
+      },
+      "card": {
+        "bg": "rgb(3, 52, 46)",
+        "bi": "none",
+        "bc": "rgba(14, 76, 65, 0.55)",
+        "fg": "rgb(237, 235, 224)"
+      },
+      "secondary": {
+        "bg": "rgb(3, 52, 46)",
+        "bi": "none",
+        "bc": "rgba(14, 76, 65, 0.55)",
+        "fg": "rgb(156, 195, 187)"
+      }
+    },
+    "tileText": [
+      {
+        "label": "يستدعي الانتباه",
+        "hasN": true,
+        "kids": 2
+      },
+      {
+        "label": "قيد المراجعة",
+        "hasN": true,
+        "kids": 2
+      },
+      {
+        "label": "إجمالي التنبيهات",
+        "hasN": true,
+        "kids": 3
+      }
+    ]
+  },
+  "1440/space": {
+    "lead": {
+      "x": 1084,
+      "y": 79,
+      "w": 340
+    },
+    "map": {
+      "x": 0,
+      "y": 0,
+      "w": 1440,
+      "h": 900
+    },
+    "grids": [
+      "card-grid|314px|12px",
+      "dash-stats triage|153px 153px|8px"
+    ],
+    "children": [
+      "country-card|0px|8px|314"
+    ],
+    "tile": {
+      "w": 153,
+      "pad": "7px 11px"
+    },
+    "satBtn": {
+      "pad": "3px 9px",
+      "fs": "11px",
+      "h": 23
+    },
+    "ink": {
+      "root": {
+        "--bg": "#002623",
+        "--panel": "#03342e",
+        "--panel-raised": "#054239",
+        "--panel-glass": "rgba(3, 52, 46, .82)",
+        "--hair": "rgba(14, 76, 65, .55)",
+        "--scrim": "rgba(0, 26, 24, .8)"
+      },
+      "body": {
+        "bg": "rgb(0, 38, 35)",
+        "bi": "radial-gradient(60% 50% at 18% 12%, rgba(66, 129, 119, 0.14) 0%, rgba(0, 0, 0, 0) 100%), radial-gradient(50% 40% at 83% 9%, rgba(217, 171, 74, 0.07) 0%, rgba(0, 0, 0, 0) 100%), linear-gradient(165deg, rgb(0, 26, 24) 0%, rgb(0, 38, 35) 40%, rgb(3, 52, 46) 100%), none",
+        "bc": "rgb(237, 235, 224)",
+        "fg": "rgb(237, 235, 224)"
+      },
+      "lead": {
+        "bg": "rgba(3, 52, 46, 0.82)",
+        "bi": "none",
+        "bc": "rgba(14, 76, 65, 0.55)",
+        "fg": "rgb(237, 235, 224)"
+      },
+      "tile": {
+        "bg": "rgb(5, 66, 57)",
+        "bi": "none",
+        "bc": "rgba(14, 76, 65, 0.55)",
+        "fg": "rgb(237, 235, 224)"
+      },
+      "card": {
+        "bg": "rgb(3, 52, 46)",
+        "bi": "none",
+        "bc": "rgba(14, 76, 65, 0.55)",
+        "fg": "rgb(237, 235, 224)"
+      },
+      "secondary": {
+        "bg": "rgb(3, 52, 46)",
+        "bi": "none",
+        "bc": "rgba(14, 76, 65, 0.55)",
+        "fg": "rgb(156, 195, 187)"
+      }
+    },
+    "tileText": [
+      {
+        "label": "يستدعي الانتباه",
+        "hasN": true,
+        "kids": 2
+      },
+      {
+        "label": "قيد المراجعة",
+        "hasN": true,
+        "kids": 2
+      },
+      {
+        "label": "إجمالي التنبيهات",
+        "hasN": true,
+        "kids": 3
+      }
+    ]
+  },
+  "1900/air": {
+    "lead": {
+      "x": 1544,
+      "y": 79,
+      "w": 340
+    },
+    "map": {
+      "x": 0,
+      "y": 0,
+      "w": 1900,
+      "h": 950
+    },
+    "grids": [
+      "card-grid|314px|12px",
+      "dash-stats triage|153px 153px|8px"
+    ],
+    "children": [
+      "country-card|0px|8px|314"
+    ],
+    "tile": {
+      "w": 153,
+      "pad": "7px 11px"
+    },
+    "satBtn": {
+      "pad": "3px 9px",
+      "fs": "11px",
+      "h": 23
+    },
+    "ink": {
+      "root": {
+        "--bg": "#002623",
+        "--panel": "#03342e",
+        "--panel-raised": "#054239",
+        "--panel-glass": "rgba(3, 52, 46, .82)",
+        "--hair": "rgba(14, 76, 65, .55)",
+        "--scrim": "rgba(0, 26, 24, .8)"
+      },
+      "body": {
+        "bg": "rgb(0, 38, 35)",
+        "bi": "radial-gradient(60% 50% at 18% 12%, rgba(66, 129, 119, 0.14) 0%, rgba(0, 0, 0, 0) 100%), radial-gradient(50% 40% at 83% 9%, rgba(217, 171, 74, 0.07) 0%, rgba(0, 0, 0, 0) 100%), linear-gradient(165deg, rgb(0, 26, 24) 0%, rgb(0, 38, 35) 40%, rgb(3, 52, 46) 100%), none",
+        "bc": "rgb(237, 235, 224)",
+        "fg": "rgb(237, 235, 224)"
+      },
+      "lead": {
+        "bg": "rgba(3, 52, 46, 0.82)",
+        "bi": "none",
+        "bc": "rgba(14, 76, 65, 0.55)",
+        "fg": "rgb(237, 235, 224)"
+      },
+      "tile": {
+        "bg": "rgb(5, 66, 57)",
+        "bi": "none",
+        "bc": "rgba(14, 76, 65, 0.55)",
+        "fg": "rgb(237, 235, 224)"
+      },
+      "card": {
+        "bg": "rgb(3, 52, 46)",
+        "bi": "none",
+        "bc": "rgba(14, 76, 65, 0.55)",
+        "fg": "rgb(237, 235, 224)"
+      },
+      "secondary": {
+        "bg": "rgb(3, 52, 46)",
+        "bi": "none",
+        "bc": "rgba(14, 76, 65, 0.55)",
+        "fg": "rgb(156, 195, 187)"
+      }
+    },
+    "tileText": [
+      {
+        "label": "يستدعي الانتباه",
+        "hasN": true,
+        "kids": 2
+      },
+      {
+        "label": "قيد المراجعة",
+        "hasN": true,
+        "kids": 2
+      },
+      {
+        "label": "إجمالي التنبيهات",
+        "hasN": true,
+        "kids": 3
+      }
+    ]
+  },
+  "1900/sea": {
+    "lead": {
+      "x": 1544,
+      "y": 79,
+      "w": 340
+    },
+    "map": {
+      "x": 0,
+      "y": 0,
+      "w": 1900,
+      "h": 950
+    },
+    "grids": [
+      "card-grid|314px|12px",
+      "dash-stats triage|153px 153px|8px"
+    ],
+    "children": [
+      "country-card|0px|8px|314"
+    ],
+    "tile": {
+      "w": 153,
+      "pad": "7px 11px"
+    },
+    "satBtn": {
+      "pad": "3px 9px",
+      "fs": "11px",
+      "h": 23
+    },
+    "ink": {
+      "root": {
+        "--bg": "#002623",
+        "--panel": "#03342e",
+        "--panel-raised": "#054239",
+        "--panel-glass": "rgba(3, 52, 46, .82)",
+        "--hair": "rgba(14, 76, 65, .55)",
+        "--scrim": "rgba(0, 26, 24, .8)"
+      },
+      "body": {
+        "bg": "rgb(0, 38, 35)",
+        "bi": "radial-gradient(60% 50% at 18% 12%, rgba(66, 129, 119, 0.14) 0%, rgba(0, 0, 0, 0) 100%), radial-gradient(50% 40% at 83% 9%, rgba(217, 171, 74, 0.07) 0%, rgba(0, 0, 0, 0) 100%), linear-gradient(165deg, rgb(0, 26, 24) 0%, rgb(0, 38, 35) 40%, rgb(3, 52, 46) 100%), none",
+        "bc": "rgb(237, 235, 224)",
+        "fg": "rgb(237, 235, 224)"
+      },
+      "lead": {
+        "bg": "rgba(3, 52, 46, 0.82)",
+        "bi": "none",
+        "bc": "rgba(14, 76, 65, 0.55)",
+        "fg": "rgb(237, 235, 224)"
+      },
+      "tile": {
+        "bg": "rgb(5, 66, 57)",
+        "bi": "none",
+        "bc": "rgba(14, 76, 65, 0.55)",
+        "fg": "rgb(237, 235, 224)"
+      },
+      "card": {
+        "bg": "rgb(3, 52, 46)",
+        "bi": "none",
+        "bc": "rgba(14, 76, 65, 0.55)",
+        "fg": "rgb(237, 235, 224)"
+      },
+      "secondary": {
+        "bg": "rgb(3, 52, 46)",
+        "bi": "none",
+        "bc": "rgba(14, 76, 65, 0.55)",
+        "fg": "rgb(156, 195, 187)"
+      }
+    },
+    "tileText": [
+      {
+        "label": "يستدعي الانتباه",
+        "hasN": true,
+        "kids": 2
+      },
+      {
+        "label": "قيد المراجعة",
+        "hasN": true,
+        "kids": 2
+      },
+      {
+        "label": "إجمالي التنبيهات",
+        "hasN": true,
+        "kids": 3
+      }
+    ]
+  },
+  "1900/space": {
+    "lead": {
+      "x": 1544,
+      "y": 79,
+      "w": 340
+    },
+    "map": {
+      "x": 0,
+      "y": 0,
+      "w": 1900,
+      "h": 950
+    },
+    "grids": [
+      "card-grid|314px|12px",
+      "dash-stats triage|153px 153px|8px"
+    ],
+    "children": [
+      "country-card|0px|8px|314"
+    ],
+    "tile": {
+      "w": 153,
+      "pad": "7px 11px"
+    },
+    "satBtn": {
+      "pad": "3px 9px",
+      "fs": "11px",
+      "h": 23
+    },
+    "ink": {
+      "root": {
+        "--bg": "#002623",
+        "--panel": "#03342e",
+        "--panel-raised": "#054239",
+        "--panel-glass": "rgba(3, 52, 46, .82)",
+        "--hair": "rgba(14, 76, 65, .55)",
+        "--scrim": "rgba(0, 26, 24, .8)"
+      },
+      "body": {
+        "bg": "rgb(0, 38, 35)",
+        "bi": "radial-gradient(60% 50% at 18% 12%, rgba(66, 129, 119, 0.14) 0%, rgba(0, 0, 0, 0) 100%), radial-gradient(50% 40% at 83% 9%, rgba(217, 171, 74, 0.07) 0%, rgba(0, 0, 0, 0) 100%), linear-gradient(165deg, rgb(0, 26, 24) 0%, rgb(0, 38, 35) 40%, rgb(3, 52, 46) 100%), none",
+        "bc": "rgb(237, 235, 224)",
+        "fg": "rgb(237, 235, 224)"
+      },
+      "lead": {
+        "bg": "rgba(3, 52, 46, 0.82)",
+        "bi": "none",
+        "bc": "rgba(14, 76, 65, 0.55)",
+        "fg": "rgb(237, 235, 224)"
+      },
+      "tile": {
+        "bg": "rgb(5, 66, 57)",
+        "bi": "none",
+        "bc": "rgba(14, 76, 65, 0.55)",
+        "fg": "rgb(237, 235, 224)"
+      },
+      "card": {
+        "bg": "rgb(3, 52, 46)",
+        "bi": "none",
+        "bc": "rgba(14, 76, 65, 0.55)",
+        "fg": "rgb(237, 235, 224)"
+      },
+      "secondary": {
+        "bg": "rgb(3, 52, 46)",
+        "bi": "none",
+        "bc": "rgba(14, 76, 65, 0.55)",
+        "fg": "rgb(156, 195, 187)"
+      }
+    },
+    "tileText": [
+      {
+        "label": "يستدعي الانتباه",
+        "hasN": true,
+        "kids": 2
+      },
+      {
+        "label": "قيد المراجعة",
+        "hasN": true,
+        "kids": 2
+      },
+      {
+        "label": "إجمالي التنبيهات",
+        "hasN": true,
+        "kids": 3
+      }
+    ]
+  }
+}

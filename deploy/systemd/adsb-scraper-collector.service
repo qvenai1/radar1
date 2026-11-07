@@ -1,0 +1,35 @@
+[Unit]
+# Integrated collector unit — drives adsb_scraper (/home/gis-syr/Desktop/scraplan/aerial_source_ads),
+# which writes aircraft.jsonl + state_vectors.jsonl into ADSB_OUTPUT,
+# which scraplan-adsb-ingest.service then tails. Keep ADSB_OUTPUT here and
+# ADSB_ARCHIVE (=ADSB_OUTPUT/state_vectors.jsonl) in the ingest unit consistent.
+Description=Aerial Source (ADS) — ADS-B Exchange collector (adsb_scraper -> JSONL archives)
+Documentation=file:/home/gis-syr/Desktop/scraplan/deploy/systemd/OPERATIONS.md
+# Same ordering convention as scraplan-collector/-military (user session default
+# target). adsb_scraper retries/backs off on fetch failures, so a momentary
+# pre-network start is harmless and Restart=always recovers it.
+After=default.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/gis-syr/Desktop/scraplan/aerial_source_ads
+# ADSB_OUTPUT: the collector's output dir (holds state_vectors.jsonl). Override
+# in the EnvironmentFile if the layout differs. AOI buffer, headless, etc. read
+# from adsb_scraper's own config (ADSB_* env / config.toml / CLI).
+Environment=ADSB_OUTPUT=/home/gis-syr/Desktop/scraplan/aerial_source_ads/data_p1
+EnvironmentFile=-/home/gis-syr/.config/opensky/env
+# The launcher runs HEADED under a virtual display (xvfb-run --no-headless) to
+# reliably defeat Cloudflare, and falls back to HEADLESS if xvfb is not installed
+# yet — so the service is correct in both states and auto-upgrades to headed once
+# `sudo apt install xvfb` is done and the service is restarted (no unit edit).
+# xvfb is display-independent, so headed survives reboot with just enable-linger.
+ExecStart=/home/gis-syr/Desktop/scraplan/deploy/systemd/adsb-collector-run.sh
+# Crash/power-loss safety is the archive's, not the service's: adsb_scraper's
+# JsonlSink fsyncs each flush and, on open, truncates a trailing partial line
+# left by a hard kill — so a restart resumes writing valid JSONL with NO manual
+# cleanup. Restart=always covers both crashes and clean-exit edge cases.
+Restart=always
+RestartSec=15
+
+[Install]
+WantedBy=default.target

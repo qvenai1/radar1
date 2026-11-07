@@ -1,0 +1,18 @@
+[Unit]
+Description=Nightly off-host backup at 04:15 (after the local dump, before the reentry pull)
+
+[Timer]
+# 04:15 is chosen against the deployed timers, not picked round:
+#   00:05 scraplan-rotate    · 03:00 scraplan-backup (local dump, ~4 min)
+#   05:30 scraplan-reentry   · quarter-hourly detectors through the day
+# This sits in the quiet gap after the local dump has finished and well before the
+# reentry pull, so the nightly pg_dump this script takes never contends with the one
+# backup_db.sh is already taking, and a slow transfer has over an hour of clear air.
+OnCalendar=*-*-* 04:15:00
+# Power-loss resilient: a run missed while the box was off fires on next boot. This
+# matters more here than for any sibling — the whole point is surviving a bad event,
+# and the nights most likely to be missed are exactly the ones worth not missing.
+Persistent=true
+
+[Install]
+WantedBy=timers.target

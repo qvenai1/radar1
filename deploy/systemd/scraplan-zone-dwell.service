@@ -1,0 +1,19 @@
+[Unit]
+Description=Atheer RADAR zone-dwell detector (infrastructure dwell — safety-zone intrusions)
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/gis-syr/Desktop/scraplan
+# DATABASE_URL lives in the git-ignored project .env (loaded via python-dotenv;
+# EnvironmentFile '-' also injects it). User-unit pattern: no network-online.target
+# (a SYSTEM target absent from the user session) — matches scraplan-rendezvous/gaps.
+EnvironmentFile=-/home/gis-syr/Desktop/scraplan/.env
+# Wait briefly for the DB (same nc probe as the sibling detectors), then never block boot.
+ExecStartPre=/bin/sh -c 'for i in $(seq 1 30); do nc -z 127.0.0.1 5435 && exit 0; sleep 2; done; exit 0'
+# Idempotent recompute-and-replace over the default 720 h window: rebuilds the
+# port/busy masks and the per-zone familiarity baseline, then replaces the
+# zone_dwell rows in maritime_events. Only the STRONG subset is written
+# (safety_zone_intrusion); standoff_dwell stays annotation-only until a zone
+# reaches the baseline bars, so this cannot flood the events table.
+# Measured cost: 6.34 s, 64 MB RSS (dry-run, 2026-07-29) — cheap enough for /20.
+ExecStart=/home/gis-syr/Desktop/scraplan/.venv/bin/python scripts/detect_zone_dwell.py

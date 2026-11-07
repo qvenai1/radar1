@@ -1,0 +1,23 @@
+[Unit]
+Description=Atheer RADAR pass baseline (BASELINE-1) — what is USUAL for each satellite
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/gis-syr/Desktop/scraplan
+EnvironmentFile=-/home/gis-syr/Desktop/scraplan/.env
+ExecStartPre=/bin/sh -c 'for i in $(seq 1 30); do nc -z 127.0.0.1 5435 && exit 0; sleep 2; done; exit 0'
+
+# Back-propagates each alertable military satellite's CURRENT element over the preceding 14
+# days through the SAME classify_passes() the forward prediction uses, and stores the
+# resulting distribution (migration 041). That is what lets an alert say "closer than usual
+# for this object" as a measurement instead of a word — before this, the database held no
+# history at all to compare against (satellite_passes has one distinct computed_at,
+# satellite_elements 1-2 epochs per satellite).
+#
+# ⛔ DERIVED, NOT OBSERVED. No sensor saw these passes; `method` records that in every row
+# and the alert's caveat repeats it. It characterises orbital GEOMETRY, never history.
+#
+# ⚠ MUST RUN AFTER the elements refresh, never before: the baseline is propagated FROM the
+# current TLE, so a run against a stale element produces a stale norm. scraplan-satellites
+# refreshes elements at 00:20/06:20/12:20/18:20; this timer sits an hour behind it.
+ExecStart=/home/gis-syr/Desktop/scraplan/.venv/bin/python scripts/build_pass_baseline.py --days 14

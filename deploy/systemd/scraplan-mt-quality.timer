@@ -1,0 +1,11 @@
+[Unit]
+Description=Tag MarineTraffic position quality every 15 minutes
+
+[Timer]
+# :05 — offset from the AIS quality tagger (*:0/15) so the two never decompress chunks at
+# the same instant, and EARLY in the cycle because the MT detectors below depend on it.
+OnCalendar=*:5/15
+Persistent=true
+
+[Install]
+WantedBy=timers.target

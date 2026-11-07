@@ -1,0 +1,47 @@
+[Unit]
+Description=Maritime Source (Marine) — MarineTraffic vessel archiver (passive collection + identity enrichment)
+Documentation=file://@PROJECT_DIR@/README.md
+
+# Never stop retrying permanently. A start that fails because the target disk is
+# full or unmounted must recover on its own once the operator fixes it, so the
+# default start-rate limiter (which would latch the unit into `failed`) is off.
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+WorkingDirectory=@PROJECT_DIR@
+
+# All tuning lives here, outside this unit, so `systemctl --user edit` is never
+# needed for routine changes — including moving the archive to another disk.
+EnvironmentFile=%h/.config/mtscraper/mtscraper.env
+
+# Refuses to start when there is nowhere safe to write (disk floor, unmounted
+# target). See deploy/preflight.sh.
+ExecStartPre=@PROJECT_DIR@/deploy/preflight.sh
+
+# Headful Chromium under a virtual framebuffer: headless trips Cloudflare's
+# interstitial, headful does not, and xvfb-run supplies the display a login
+# session would otherwise provide. --passive harvests the live map's own refresh
+# cadence (gentler footprint, and measured wider tile coverage than active).
+ExecStart=/usr/bin/xvfb-run -a @PROJECT_DIR@/.venv/bin/python -m mtscraper \
+    --passive --enrich --output ${MT_OUTPUT_DIR}
+
+Restart=always
+RestartSec=60
+
+# SIGTERM reaches the Python process through the cgroup, and main.py turns it
+# into a graceful stop that flushes the JSONL writers. Give that room to finish.
+KillSignal=SIGTERM
+TimeoutStopSec=45
+
+# A browser held open for days is the classic slow leak. Capping it converts an
+# unbounded leak into an automatic recycle instead of host-wide memory pressure —
+# the archive resumes from its cache, so a restart costs nothing but one cycle.
+MemoryMax=4G
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=mtscraper
+
+[Install]
+WantedBy=default.target

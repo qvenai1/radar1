@@ -1,0 +1,17 @@
+[Unit]
+Description=Atheer RADAR MT zone-dwell detector (MT-DETECT-2) — MarineTraffic track
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/gis-syr/Desktop/scraplan
+EnvironmentFile=-/home/gis-syr/Desktop/scraplan/.env
+ExecStartPre=/bin/sh -c 'for i in $(seq 1 30); do nc -z 127.0.0.1 5435 && exit 0; sleep 2; done; exit 0'
+
+# ⛔ THE WINDOW IS SET BY THE EVENT'S OWN HORIZON, NOT BY THE TIMER. A dwell session can span
+# many hours, and the run is recompute-replace: its DELETE is scoped to the SAME --hours it
+# scanned (the rule established after a narrower delete destroyed 53 rendezvous events).
+# A window matched to the 15-minute cadence would therefore rebuild only the last 15 minutes
+# and could never observe a session that started before it.
+#
+# 168 h (7 days) covers MarineTraffic's useful depth while keeping each run cheap.
+ExecStart=/home/gis-syr/Desktop/scraplan/.venv/bin/python scripts/detect_zone_dwell.py --source marinetraffic --hours 168

@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Atheer RADAR — مراقب المجال الجوي</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23d9ab4a' d='M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z'/%3E%3C/svg%3E"
+    />
+    <script>
+      // The UI chrome is fixed dark ("RADAR" identity) — only the basemap
+      // toggles day/night (data-theme scoped to .map-host, owned by React).
+      //
+      // ⛔ THIS LINE IS LOAD-BEARING FOR MORE THAN THE LOOK (THEME-4). It is unconditional —
+      // no persisted value, no prefers-color-scheme branch — and that is the ONLY reason the
+      // light token set never reaches a user. Its severity axis is measured FAILING the
+      // project's ΔE ≥ 20 bar (worst pair 16.38; see the frozen block in styles/tokens.css),
+      // so making this line conditional would ship an unvalidated palette. Fix that axis
+      // first; do not make the theme switchable before it passes.
+      document.documentElement.dataset.theme = "dark";
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

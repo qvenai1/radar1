@@ -1,0 +1,20 @@
+[Unit]
+Description=Atheer RADAR AIS-gap detector (behavioural A1 — confound-removed candidates)
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/gis-syr/Desktop/scraplan
+# DATABASE_URL lives in the git-ignored project .env (loaded via python-dotenv;
+# EnvironmentFile '-' also injects it so the run does not depend on dotenv's cwd).
+# (User-unit pattern: matches scraplan-satellites/maritime — no network-online.target,
+# which is a SYSTEM target absent from the user session.)
+EnvironmentFile=-/home/gis-syr/Desktop/scraplan/.env
+# Wait briefly for the DB (same nc probe as scraplan-maritime), then never block boot.
+ExecStartPre=/bin/sh -c 'for i in $(seq 1 30); do nc -z 127.0.0.1 5435 && exit 0; sleep 2; done; exit 0'
+# INCREMENTAL by periodic idempotent recompute: the detector rebuilds the
+# coverage mask + outage windows from current history and UPSERTs every closed
+# gap (recompute-and-replace on the natural key), so re-running is safe and a
+# gap becomes a candidate the first run after it closes. A full recompute is
+# cheap (~2 s over the current history); for a very large history, pass
+# --since <ISO/epoch> to bound the re-detection window.
+ExecStart=/home/gis-syr/Desktop/scraplan/.venv/bin/python scripts/detect_ais_gaps.py

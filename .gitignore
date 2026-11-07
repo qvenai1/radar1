@@ -1,0 +1,71 @@
+# Secrets — never commit. Covers .env, .env.local, mtscraper.env, anything *.env —
+# the old exact-match `.env` let sibling env files slip in (security review finding 4).
+# The two tracked exceptions are templates with no live values; keep them that way.
+.env
+.env.*
+*.env
+!.env.example
+!maritime_source_marine/deploy/mtscraper.env
+
+# Data — the JSONL archive is durable ground truth but lives outside git
+opensky_output/
+maritime_output/
+satellite_output/
+marinetraffic_output/
+
+# Collectors archives / outputs & caches
+maritime_source_marine/mt_output/
+maritime_source_marine/.venv/
+maritime_source_marine/.mypy_cache/
+maritime_source_marine/.ruff_cache/
+maritime_source_marine/.pytest_cache/
+aerial_source_ads/data_*/
+aerial_source_ads/adsb_output/
+# Ad-hoc CSV dump of scraped positions (repeated headers; not source)
+aerial_source_ads/aircraft.csv
+aerial_source_ads/.venv/
+aerial_source_ads/.mypy_cache/
+aerial_source_ads/.ruff_cache/
+aerial_source_ads/.pytest_cache/
+mtscraper/mt_output/
+mtscraper/.venv/
+mtscraper/.mypy_cache/
+mtscraper/.ruff_cache/
+mtscraper/.pytest_cache/
+plandata/data_*/
+plandata/adsb_output/
+plandata/.venv/
+plandata/.mypy_cache/
+plandata/.ruff_cache/
+plandata/.pytest_cache/
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Ingest runtime state (byte offset of the JSONL tailer)
+.ingest_state.json
+.claude/
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/tsconfig.tsbuildinfo
+
+# E2: large OpenSky aircraftDatabase.csv snapshot — fetch/refresh, never commit
+enrichment_data/
+
+# Exports and large dumps
+csv_exports/
+csv_exports.zip
+csv_exports*
+
+# Packaging metadata
+*.egg-info/
+
+# IDE / local configs
+.mcp.json

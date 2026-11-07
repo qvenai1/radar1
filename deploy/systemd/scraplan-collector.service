@@ -1,0 +1,20 @@
+[Unit]
+Description=Atheer RADAR collector (Middle East box, DB mirror)
+After=default.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/gis-syr/Desktop/scraplan
+EnvironmentFile=/home/gis-syr/.config/opensky/env
+# DB being down never stops the collector (archive is ground truth) — the
+# wait just avoids pointless mirror errors right after boot
+ExecStartPre=/bin/sh -c 'for i in $(seq 1 30); do nc -z 127.0.0.1 5435 && exit 0; sleep 2; done; exit 0'
+ExecStart=/home/gis-syr/Desktop/scraplan/.venv/bin/python tracker_opensky.py \
+    --lamin 12.0 --lomin 24.0 --lamax 42.0 --lomax 63.5 \
+    --snapshot-delay 100 \
+    --db-url ${OPENSKY_DB_URL}
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=default.target

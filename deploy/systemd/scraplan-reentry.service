@@ -1,0 +1,19 @@
+[Unit]
+Description=Atheer RADAR reentry collector (Space-Track TIP → DB, geo-linked)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/gis-syr/Desktop/scraplan
+# SPACETRACK_USER/PASS + DATABASE_URL live in the git-ignored project .env.
+# tracker_reentry.py loads it via python-dotenv; EnvironmentFile (optional, '-')
+# also injects it so the service does not depend on dotenv's cwd search.
+EnvironmentFile=-/home/gis-syr/Desktop/scraplan/.env
+# Space-Track `tip`/`decay` are ~1/day classes — this runs ONCE DAILY (the
+# timer); there is no fresher data. The S2a client owns auth, session reuse,
+# the rate limiter, and backoff; this collector never re-implements them.
+# reentry.jsonl is written FIRST (ground truth) before the idempotent DB mirror,
+# so a mid-run DB failure never loses the fetched predictions (backfill covers it).
+ExecStartPre=/bin/sh -c 'for i in $(seq 1 30); do nc -z 127.0.0.1 5435 && exit 0; sleep 2; done; exit 0'
+ExecStart=/home/gis-syr/Desktop/scraplan/.venv/bin/python tracker_reentry.py --lookback-days 60

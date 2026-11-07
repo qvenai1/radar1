@@ -1,0 +1,72 @@
+-- 021_vessel_geo_classification.sql
+--
+-- Maritime layer M1 — ADDITIVE geo-classification columns on vessel_states,
+-- the sea-going parallel of migration 012 (state_vectors geo columns), ADAPTED
+-- for the maritime domain rather than copied.
+--
+-- Classification is produced by scraplan's ONE shared classifier
+-- (backend/geo_area.py) — the SAME seven-country + AEQD projected-distance
+-- machinery the aircraft layer uses — never a second geo implementation. What
+-- differs is the SEMANTICS, because a vessel is on water, not over land:
+--
+--   * A ship is essentially never INSIDE a country polygon, so the aircraft
+--     INSIDE / NEAR(50 km) / OUTSIDE model does not transfer directly. The
+--     meaningful maritime question is "is this vessel within a country's
+--     TERRITORIAL SEA?" — UNCLOS Art. 3 sets that at 12 nautical miles
+--     (= 22.224 km) from the coast. That legal, citable limit is the maritime
+--     band, NOT the aircraft 50 km land buffer (which would flag nearly every
+--     coastal vessel and lose analytical meaning). Configurable via env
+--     SCRAPLAN_TERRITORIAL_SEA_KM (backend.geo_area.territorial_sea_km).
+--
+--   * `country`      = the territorial-sea country when the vessel is within
+--                      12 NM of that country's coast (its sovereign waters, the
+--                      sea analogue of the aircraft INSIDE case), else NULL.
+--   * `near_country` = the nearest of the seven countries' coasts when the
+--                      vessel is OUTSIDE every territorial sea (the analogue of
+--                      aircraft NEAR), else NULL. So country and near_country are
+--                      MUTUALLY EXCLUSIVE for any positioned row, exactly like
+--                      the aircraft layer: `country IS NOT NULL` iff the vessel
+--                      is within the band.
+--   * `distance_km`  = TRUE kilometric distance to the nearest country's coast
+--                      (projected AEQD; 0 on/inside a polygon). This DELIBERATELY
+--                      DIVERGES from the aircraft layer, where distance_km is an
+--                      envelope-centre provenance anchor: for a vessel the
+--                      distance to the coast is the analytically meaningful
+--                      quantity and is exactly what the 12 NM test is computed
+--                      from. Same column name, per-table semantics, documented.
+--   * `geo_source`   = 'scraplan-aoi' — the classifier identity, IDENTICAL to
+--                      the aircraft layer, deliberately distinct from the
+--                      natural-key `source` (the feed, e.g. 'aisstream').
+--
+-- Aircraft-specific columns are INTENTIONALLY OMITTED (the task's guidance:
+-- do not force aircraft flags onto vessels):
+--   * position_quality — vessel_states rows already carry a position by
+--     construction (maritime.db.vessel_row skips rows without lat/lon), so a
+--     confirmed/no_position axis would be a constant; the geo columns being
+--     NULL already marks the (non-existent here) positionless case.
+--   * validation_flags — those are ADS-B kinematic sanity flags in metric
+--     units; AIS has no equivalent scraplan computes here (M1 is geography
+--     only; AIS spoof/identity checks belong to a later phase, out of scope).
+--
+-- STRICTLY ADDITIVE — final, not a patch:
+--   * every column is NULLABLE with no default beyond NULL, so all existing
+--     vessel_states rows and the only current source ('aisstream') stay valid
+--     and untouched, reading back as NULL until backfilled;
+--   * the natural key PRIMARY KEY (mmsi, ts, source) is NOT touched, so
+--     idempotency (ON CONFLICT DO NOTHING) is preserved exactly;
+--   * the hypertable, compression settings and policy are NOT touched.
+--
+-- ADD COLUMN (nullable, no default) is a catalog-only change: on TimescaleDB
+-- 2.28 it is transactional and cheap even with a compressed chunk present
+-- (verified on this DB), so this file needs no decompress dance and runs in the
+-- migrate.py default transaction. NO PostGIS/geometry — same as migration 012;
+-- classification is computed upstream in Python and archived here as its result.
+--
+-- Reversal (migrations are forward-only): DROP COLUMN country, near_country,
+-- distance_km, geo_source.
+
+ALTER TABLE vessel_states
+    ADD COLUMN country      TEXT,              -- territorial-sea country (<=12 NM), else NULL
+    ADD COLUMN near_country  TEXT,              -- nearest coast when OUTSIDE every territorial sea, else NULL
+    ADD COLUMN distance_km   DOUBLE PRECISION,  -- true km to nearest country's coast (AEQD projected)
+    ADD COLUMN geo_source    TEXT;              -- classifier identity: 'scraplan-aoi'

@@ -1,0 +1,11 @@
+[Unit]
+Description=Detect MarineTraffic rendezvous every 15 minutes
+
+[Timer]
+# :14 — last in the MT chain (quality :05, gnss :10, zone-dwell :12) and clear of the AIS
+# rendezvous timer (*:0/20). This is the ~90 s job, so it runs when the cheap ones are done.
+OnCalendar=*:14/15
+Persistent=true
+
+[Install]
+WantedBy=timers.target

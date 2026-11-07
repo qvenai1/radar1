@@ -1,0 +1,36 @@
+[Unit]
+Description=scraplan ADS-B Exchange ingester (adsb_scraper archive -> TimescaleDB)
+Documentation=file:/home/gis-syr/Desktop/scraplan/deploy/systemd/OPERATIONS.md
+# Same ordering convention as scraplan-collector/-military (user session default
+# target). Network ordering is unnecessary: the archive is a local file and the
+# DB is local — the hard DB dependency is the ExecStartPre wait below, and
+# follow tolerates a missing/growing archive, so no collector ordering is needed.
+After=default.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/gis-syr/Desktop/scraplan
+# ADSB_ARCHIVE = full path to adsb_scraper's state_vectors.jsonl (external
+# project, separate machine dir) — keep consistent with the collector's
+# ADSB_OUTPUT. DATABASE_URL is read from the project .env (load_dotenv) exactly
+# like the backfill/follow tool on the command line.
+EnvironmentFile=/home/gis-syr/.config/opensky/env
+# DB-readiness wait (same pattern as the OpenSky collector). The DB being down
+# never stops ingestion: adsb_scraper keeps archiving, and follow replays from
+# its persisted offset on reconnect — so the archive is never the bottleneck.
+ExecStartPre=/bin/sh -c 'for i in $(seq 1 30); do nc -z 127.0.0.1 5435 && exit 0; sleep 2; done; exit 0'
+# follow = tail the external archive through the SAME idempotent path
+# (parse_record + INSERT_SQL, ON CONFLICT (icao24, ts, source) DO NOTHING).
+# --state-dir persists the byte offset UNDER scraplan (survives reboot); after a
+# restart/power-loss follow resumes from that offset and re-ingests nothing.
+ExecStart=/home/gis-syr/Desktop/scraplan/.venv/bin/python ingest.py follow \
+    --source adsbexchange \
+    --archive ${ADSB_ARCHIVE} \
+    --state-dir /home/gis-syr/Desktop/scraplan/adsb_ingest_state \
+    --poll 5
+# always: survive power loss and any exit; idempotency makes restart safe.
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=default.target

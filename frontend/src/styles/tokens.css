@@ -1,0 +1,666 @@
+/*
+ * Theme tokens — the ONLY place colors exist.
+ *
+ * UNIFIED BRAND (2026-07-08): derived from the user's other frontends
+ * (~/Documents/frontend + face1) so all projects share one identity:
+ *   dark-navy #030611 · off-white #f4f1ec · muted-gold #d9ab4a
+ *   teal #236b69 · burgundy #7a242f · Cairo/Manrope type · glass panels,
+ *   large radii, deep shadows, soft glows.
+ *
+ * DARK  "SCOPE"  — ⚠ NO LONGER NAVY. THEME-2b switched the dark surfaces to Forest
+ *                  Direction 2 (immersive): forest-900 ground, forest-800 panels, wheat
+ *                  ink. The GOLD survives as --accent (glyphs, the info badge, the
+ *                  «محسوب» freshness axis) and the MAP stays dark and unchanged by the
+ *                  owner's decision. The unified-brand line above describes the palette
+ *                  this project shares with the owner's other frontends; the dark theme
+ *                  has diverged from it deliberately.
+ * LIGHT "CHART"  — the same brand hues on the brand's warm off-white paper
+ *                  (their --off-white becomes the surface; ink goes navy). UNCHANGED —
+ *                  Direction 2 was signed off for dark only, and the app is fixed dark.
+ *
+ * ✅ CHART PALETTE — VALIDATED, AND THE GATE IS NOW IN THE REPOSITORY (DATAVIZ-1).
+ * `npm run verify:dataviz` (frontend/scripts/verify-dataviz.mjs) reads THIS FILE and
+ * forest.css, resolves the var() chain, and re-derives every number below. ⛔ The old
+ * "six-checks script" this block cited was never committed anywhere — a gate nobody can
+ * re-run is a claim, which is precisely how its figures went stale twice without failing.
+ *
+ * ⛔ AND THE RECORDED DEBT WAS MEASURED AGAINST THE WRONG SURFACE. It read air 4.23:1 /
+ * ground 4.42:1 "on the panel" — but `.chart-card` and `.stats-view` declare NO background
+ * anywhere in app.css, so a chart inherits the PAGE surface `--bg` #002623, not `--panel`
+ * #03342e. Re-measured on the surface actually shipped:
+ *     --series-air     #ae8a39   4.99:1   (bar 3:1, non-text)   PASS
+ *     --series-ground  #17a496   5.21:1   (bar 3:1, non-text)   PASS
+ * ⇒ The series were never under their bar. The debt's premise was an artefact of measuring
+ * against a card the charts do not sit in.
+ *
+ * ⛔ WHAT WAS ACTUALLY BROKEN, and what this item fixed, is the furniture the debt never
+ * mentioned: --chart-grid was 1.42:1 and --chart-axis 1.82:1 — both far under 3:1. See the
+ * chart-token block below for the values chosen and why they are charcoal, not green.
+ *
+ * Pairwise separation (the second gate, ≥20 as for the severity axis): air/ground ΔE00
+ * 35.28, and 31.88 under a deuteranopia simulation. A surface change cannot move a pairwise
+ * distance, which is why this number survived both identity switches unharmed.
+ *
+ * ✔ DISCHARGED IN CHART-TEXT-1 — the debt this block recorded (chart `<text>` carrying no
+ * `fill`, falling back to SVG's initial BLACK at 1.30:1 on --bg #002623 against a 4.5:1 text
+ * bar) is paid: `app.css .chart-svg text` sets `fill: var(--ink)` — 13.49:1 on dark --bg
+ * #002623, 14.12:1 on light --bg #f4f1ec. ⚠ The prediction here that "no token can repair
+ * that" was wrong in its second half: the repair is a CSS rule, deliberately not a `fill=`
+ * attribute, so that `verify:dataviz` can read it. The 1.30:1 measurement itself was exact.
+ *
+ * ⚠ LIGHT is unmeasured HERE and stays so — for the chart FURNITURE. ⛔ Not for the chart TEXT:
+ * that rule is theme-less, one declaration serving both surfaces, so verify-dataviz.mjs gates
+ * it on --bg in BOTH blocks and fails on either. The furniture stays frozen (see the --sev-
+ * block); its light numbers are printed by the gate as notes rather than left unmeasured.
+ * The display gold #d9ab4a stays UI chrome / glyphs (outside the dark chart
+ * lightness band by design). Status colors follow face1's status tokens.
+ */
+
+/* ---------- UI-1: PAGE GEOMETRY — the two measures the dashboard is laid out against ----------
+ * ⛔ In `:root`, DELIBERATELY OUTSIDE the two [data-theme] blocks below, because these are
+ * GEOMETRY, not colour: a max-width does not change between light and dark. Every other token
+ * in this file is duplicated per theme because each has two values; duplicating a measure that
+ * has ONE would create two places for it to drift. The theme blocks are more specific
+ * ((0,1,0) > (0,0,1)) and would win if they ever defined these — they must not.
+ *
+ * ⛔ --surface-max — HISTORY FIRST, BECAUSE THE VALUE MOVED UNDER THIS COMMENT ONCE ALREADY,
+ * and the move is recorded rather than smoothed over (G8c, below in the gate, now catches a
+ * token whose own comment names a different value unless it is marked as history).
+ *
+ * It was 1,180px in UI-1, derived on a surface with NO map seat: the monitor's components were
+ * authored for what was then a 340px sidebar and inherited the whole viewport — that pre-cap
+ * world measured a search field of 1,864px, a table of 1,862px, tiles of 929px holding three
+ * digits. On that seat-less page, 1,180px kept `.card-grid`'s minmax(240px) at four columns and
+ * left a 4–10 column table readable, where 600px cramped it and 1,520px restored the sprawl.
+ *
+ * UI-2b then gave the map a 40 % seat WITHOUT re-measuring what remained: the remaining box was
+ * 894px at 1440 and was 1,284px at 1900, so 1,180 bound at ONE gate width and sat inert at the
+ * other. Re-derived on the rendered DOM this session, against today's ladder:
+ *
+ *     vp     layout        seat          resolved column track   vs --chart-max 720px
+ *     1440   side-by-side  576 (40 %)    804 (viewport-bound)    +84
+ *     1900   side-by-side  760 (40 %)    920 (the cap binds)     +200
+ *     1320   side-by-side  528 (40 %)    left only 732px         +12 ← tightest row; fixes the 1319 breakpoint
+ *     ≤1319  stacked band  full width    920 (the cap binds)     +200
+ *
+ * The value is 920px — see its own comment below. It stays above the chart floor at every
+ * measured width, including the tightest one, which is what sets the breakpoint.
+ *
+ * ⛔ --chart-max IS THE CHARTS' AUTHORED WIDTH, and it is not a preference. TrafficChart and
+ * AltitudeChart declare viewBox="0 0 720 220"; a viewBox SVG scales its text with its box, so at
+ * any width but 720 the tick labels render at some other size (measured before this item:
+ * 1,900px wide = 2.64x = 34px text instead of the authored 13px). Rendering the SVG at exactly
+ * 720 is the only width at which the text is the size it was authored to be. ⛔ Change the
+ * viewBox and this token is wrong. */
+:root {
+  /* ⛔ UI-2c — THE SPACING LADDER, AND IT EXISTS BECAUSE THERE WAS NO LADDER. Inventoried on the
+   * rendered DOM before this item, the monitor surface used EIGHT distinct sub-8px sibling gaps
+   * (0 · 2 · 2.5 · 3 · 4 · 5 · 6 · 7) and, at the SECTION level, four unrelated values: [hist]
+   * 10px map insets, a [hist] 10px gutter, 16/18px workspace padding and a [hist] 14px section
+   * gap. None of them derives from another, which is what "no rhythm" means in numbers rather
+   * than in adjectives. (The values on the tagged lines are the PRE-LADDER world — kept as the
+   * measurement that justified the ladder, marked so G8c does not mistake them for current.)
+   * ⛔ SCOPE, STATED SO THE REPORT CANNOT OVERCLAIM: this ladder governs the SECTION-level spacing
+   * this item positions — the map seat's insets, the gutter between the two regions, the content
+   * region's padding, and the gap between its rows. The per-component [hist] 2–7px gaps INSIDE
+   * cards, strips and tables are NOT swept: they belong to a dozen rules on four surfaces, and a
+   * layout item that re-spaces every card is how a distribution change becomes a redesign. They
+   * are reported as measured, not silently left as "done".
+   * ⚠ 4px base. Every step is a multiple of it, INCLUDING --nav-clear (15 × 4), so the clearance
+   * is on the ladder rather than beside it. */
+  /* ⛔ UI-FIX step 5 — THE LADDER IS NOW MULTIPLES OF ITS OWN BASE, and that is not cosmetic. G8b's
+   * rule is «every declared geometry token has a reader», and `--sp-1` had none: 22 rules hard-coded
+   * 4px while the token that means 4px sat unread. ⛔ Deleting it was the other option and it is wrong —
+   * 4px is the base the other four are derived from, and it is a legal near-line offset (a segmented
+   * control's [ref] 3px padding + [ref] 1px border), so G3 needs it in the set. Writing the steps as multiples
+   * gives the base four readers and turns «a 4px base» from a claim in a comment into a fact the
+   * arithmetic enforces: no step can drift off the base without the calc showing it. */
+  --sp-1: 4px;                        /* the base — everything below is a multiple of it */
+  --sp-2: calc(2 * var(--sp-1));      /*  8px */
+  --sp-3: calc(3 * var(--sp-1));      /* 12px — the gutter between the two regions · inner offsets */
+  --sp-4: calc(4 * var(--sp-1));      /* 16px — the page inset · the gap between sections */
+  --sp-6: calc(6 * var(--sp-1));      /* 24px — the navbar's separation from what it floats over */
+
+  /* ⛔ UI-FIX step 1 — THE PAGE'S EDGE INSET, AS A ROLE. This is the token UI-AUDIT's first symptom
+   * was missing, and the audit's number is the argument: the one distance «from the viewport edge to
+   * the first thing on the page» was declared THREE times with three values —
+   *     12px  `.map-host:has(~ .workspace) { left: var(--sp-3) }`        (the left edge)
+   *     16px  `.workspace { padding: var(--sp-4) }`                      (the right edge)
+   *     10px  `.home-panel.lead/.entity { inset-inline-…: 10px }`        (both edges, other surfaces)
+   * so the page had a 12px margin on one side and 16px on the other, and a third value on the domain
+   * tabs. ⛔ NO ELEMENT OWNED «the page's edge», which is the root defect in one line: the value was
+   * attached to whichever selector happened to sit there.
+   *
+   * ⛔ 16 AND NOT 12, and the choice is measured rather than aesthetic: 16 is ALREADY the content
+   * region's padding, so adopting it leaves the declared alignment line exactly where UI-2d put it
+   * (1424 · 1884 · 1084) and G2 — which every row now satisfies — is not disturbed. Choosing 12 would
+   * have moved every row 4px and re-opened a gate that is green. The map's left inset moves 12 → 16
+   * and the floating panels 10 → 16; nothing else in the arithmetic changes, because the seat's WIDTH
+   * is `--map-seat` and is independent of where its edge sits.
+   *
+   * ⚠ WHAT IS **NOT** A PAGE INSET, checked one by one rather than swept: `.tile-warning`'s 10px is
+   * measured from the MAP's edge (it renders inside `.map-host`), and `.chart-tip`'s `right: 10px` is a
+   * viewport CLAMP for a cursor-tracking tooltip whose over-constraint argument depends on the exact
+   * pairing with `max-width: 22rem`. Neither is content sitting against the page edge, so neither is
+   * this token's business. */
+  --page-inset: var(--sp-4);
+
+  /* …and the gutter between the two regions is a DIFFERENT distance with a different job, named so
+   * that the two are never conflated again. ⚠ The seat's inset used to be folded into `--sp-6` as
+   * «the seat's inset + the gutter», which is exactly how the page inset came to be invisible. */
+  --region-gutter: var(--sp-3);
+
+  /* ⛔ UI-2c — ONE CONSTANT FOR THE FLOATING NAVBAR'S CLEARANCE, and the divergence it ends was
+   * MEASURED, not stylistic: the bar's box is y 12 → 55 (top: [ref] 12px + [ref] 43px tall), so 54 overlaps it
+   * by [hist] 1px. app.css already recorded that — «60px, NOT the sheet's usual 54 — MEASURED, and the 54 [hist]
+   * is one pixel short» — and then left 54 in `.map-detail`, `.home-panel` and `.stats-view`
+   * anyway. Probed at 1440: `.stats-controls` starts at y 54 and the navbar's bottom corners
+   * hit-test INTO it. The seat and everything this item positions now read this token.
+   * ⚠ `.stats-view`'s own 54 is NOT changed here — that surface is out of this item's scope by
+   * instruction, so the [hist] 1px is reported rather than patched, and this token is what a later item
+   * points it at.
+   *
+   * ⛔ 64, NOT the 60 UI-2b measured, and the 4px is a GAP not a margin of comfort. 60 clears the
+   * bar's box (y 12 → 55) by [hist] 5px, and this item's own gate reports every gap under 8px, because
+   * «touching with no gap reads as overlap» is one of the failure modes the owner named. 64 = 16 × 4,
+   * still on the ladder, and leaves [hist] 9px — the first ladder-aligned clearance that passes the gate it
+   * is measured by. ⛔ The alternative was to exempt this one gap from the gate, which is how a gate
+   * stops being one.
+   *
+   * ⛔ UI-2d — THE CLEARANCE IS NOW DERIVED, AND THE GAP IS THE TOKEN. 64 made the clearance a ladder
+   * value and left the GAP off it: 64 − 55 = [hist] 9px, which does not intersect anything and does not read
+   * as a boundary either. The owner wants the map to read as its own section, so the separation is the
+   * declared quantity and the clearance is its consequence:
+   *     --nav-clear = the bar's own offset + the bar's own height + the separation
+   *                 = 12 + 43 + 24 = 79
+   * ⚠ 24 (`--sp-6`) and not 16: 16 is the row gap INSIDE the content region, and reusing it between
+   * two regions would make the boundary read as one more row. 24 is already on the ladder and already
+   * used in this sheet (it is the seat's inset plus the gutter, as one term).
+   * ⛔ `--nav-h: 43px` IS THE ONE MEASURED LITERAL and it is the thing that can go stale: the bar is
+   * `position: absolute`, so no CSS can read its height. `--nav-top` is QUOTED from `.navbar`'s own
+   * `top: 12px` rather than re-measured. The gate re-measures the rendered gap and fails if the sum
+   * stops matching, which is the only way a hardcoded height is honest.
+   * ⛔ AND ONE SOURCE MEANS ONE SOURCE: the seat, the content region, `.stats-view` and `.home-panel`
+   * all read this token, so the four gaps are identical by construction rather than by four people
+   * remembering the same number. Before this commit they were 9 · 9 · −1 · −1 — the last two being
+   * literal 54s that «survived by horizontal luck», measured.
+   * ⚠ `.map-detail` is NOT in that list and is not meant to be: it clears the SEAT's top edge, not the
+   * bar, so it reads `--nav-clear + --sp-3` and its gap to the bar is legitimately larger ([ref] 36px). One
+   * source, two distances, both declared. */
+  /* ⛔ UI-FIX step 5 — `.navbar` NOW READS `--nav-top` INSTEAD OF DECLARING 12px ITSELF. UI-2d created
+   * this token «to quote the bar's own offset» and left the bar's literal in place: one distance, two
+   * sources, created in the commit that named the distance. That is the exact pattern that produced the
+   * 54/64/56 saga, reproduced immediately after being fixed. The bar is now the token's reader. */
+  --nav-top: 12px;
+  /* ⛔ `--nav-h` STAYS A MEASURED CONSTANT, and the alternative was tried and rejected on a measurement.
+   * Making the bar READ it (`height: var(--nav-h)`) would have inverted the dependency and removed the
+   * copy — except the bar is NOT 43px at every width: measured [ref] 43px at 1100 · 1440 · 1900, and **[ref] 45px at
+   * or below [ref] 680px**, where the narrow override changes the gap and the tallest child grows 29 → 31.
+   * Pinning 43 would clip it there; pinning 45 would make the clearance [ref] 2px loose everywhere else.
+   * ⇒ The copy stays and is made VERIFIED instead of trusted: G1b measures the rendered gap between the
+   * bar's bottom and the seat/region/panels and fails if it stops equalling `--nav-gap`. An unverifiable
+   * copy becomes a checked one, which is the only honest way to keep a hardcoded height.
+   * ⚠ AND THE DIVERGENCE IS RECORDED RATHER THAN HIDDEN: below [ref] 680px the clearance is [ref] 2px short of its
+   * intent (gap 22, not 24). No overlap, and that width is a different layout with its own arithmetic —
+   * but it is not what this token claims, so it is written here. */
+  --nav-h: 43px;     /* MEASURED at ≥1100: [ref] 6px padding + [ref] 1px border, twice, around a [ref] 29px row */
+  --nav-gap: var(--sp-6);
+  --nav-clear: calc(var(--nav-top) + var(--nav-h) + var(--nav-gap));
+
+  /* ⛔ UI-2c — THE LANE LEAFLET'S OWN CONTROLS OCCUPY, so the two panels that float over the map
+   * start on ONE declared line instead of at the map's edge by default. 56px = the zoom control's
+   * 34px box + Leaflet's own 10px offset inside the container + a 12px gutter, measured at x 23 → 57
+   * inside a seat whose left edge is 12. ⛔ Both `.draw-hint` and `.map-detail` sat on those buttons
+   * before this item (probed: the `+` glyph's own ink returned the covering panel at every point),
+   * each for a different reason, which is exactly why the clearance is a token and not two magic
+   * numbers a third panel would have to rediscover. */
+  --map-chrome-lane: 56px;
+
+  /* ⛔ 920px — RECALIBRATED BY UI-2b AGAINST THE REMAINING WIDTH, NOT THE SCREEN, and re-measured
+   * this session on the rendered DOM (full table in the UI-1 header above). The figure it
+   * replaced was UI-1's pre-seat 1,180: right when measured, wrong once the map took 40 % — the
+   * remaining content box was then 894px at 1440 and was 1,284px at 1900, so that cap bound at
+   * ONE gate width and sat inert at the other (the owner's symptom 2).
+   * With today's seat and ladder the remaining box is 804px at 1440 and 1,080px at 1900, so 920
+   * is free at 1440 (804 governs), binding at 1900 and everywhere stacked. ⛔ Its floor is
+   * --chart-max (720px): the tightest side-by-side row is 1320 → left 732px (+12), which is the
+   * arithmetic that fixes the 1319 breakpoint. Below it nothing is negotiated — the map becomes
+   * a full-width band and this cap governs alone. */
+  --surface-max: 920px;    /* the dashboard's content column, AFTER the map seat */
+
+  /* ⛔ UI-2b — a FIELD is not a COLUMN. A search input stretched to the full column is 800–920px of
+   * box for one word, which is the second half of symptom 2. The column cap makes the page a page;
+   * this makes an input an input. Not applied to tables or the card grid, which legitimately use
+   * the column. */
+  /* ⛔ UI-FIX step 3 — THE TILE IS A SIZE, AND THIS IS UI-1b's OWN PURPOSE FINALLY DELIVERED. That item
+   * wrote «the tile is now the same object at every width, which is the point» and implemented it as
+   * `auto-fill` + `minmax(150px, 1fr)` — which makes the tile the same object for two callers in the SAME
+   * container, and a different object in a container 26px narrower. Measured: 156px inside
+   * `.domain-detail` and 151px inside `aside.side`, on one screen, which is the owner's symptom 3.
+   * ⛔ A fraction cannot be the answer, because a fraction IS the container. A declared width can:
+   * 150px is UI-1b's own floor, so no caller shrinks below what that item calibrated. */
+  --tile-w: 150px;
+  /* ⛔ DASH-IDLE — the result CARD is a size too, and two gates forced it together. With
+   * auto-fill tracks, a live-feed signal group holding exactly one alert laid 1 kid into
+   * 3 tracks in the 920px column (G6's reserved-empty, arriving through data); switching the
+   * grid to auto-fit collapsed the empties but let each group's track count vary with its kid
+   * count — same-role cards stopped sharing a width (G5 spread 544/621px). A declared width
+   * ends both: auto-fit collapses to exactly the kid count, every card is the same object on
+   * every surface that renders it (workspace feed · search results · area results · the three
+   * domain tabs' overlay panels), and the row leftover is declared rather than reserved.
+   * 240px = the authored minmax(240px) floor this grid has always used. */
+  --card-w: 240px;
+  --field-max: 420px;
+  --chart-max: 720px;      /* = the charts' viewBox width; scale 1.0 */
+
+  /* ⛔ UI-1b — THE HEIGHT BUDGET a bounded detail surface gets, and the 128px was MEASURED, not
+   * estimated. `.domain-detail` started at y = 112 on the monitor at every viewport tested
+   * (1440x900 · 1900x950 · 376x900 — `.brand` ~45 + the mode segment ~30 + two 14px grid gaps +
+   * `.workspace`'s 16px top padding), and `.workspace` reserves 16px at the bottom: 112 + 16.
+   * ⚠ `dvh`, not `vh`: on a mobile browser `vh` is the tallest-possible viewport, so a surface
+   * sized in `vh` sits partly under the retracting toolbar for the whole session.
+   *
+   * ⛔ UI-2c — RE-DERIVED, BECAUSE UI-2c MOVED THE ORIGIN AND THE DERIVATION IS THE TOKEN. Two of
+   * this item's changes push `.domain-detail` down: the region now starts at `--nav-clear` (64)
+   * instead of y 0, and the control band puts the brand and the mode segment on ONE row instead of
+   * two. Measured after: the origin is y = 133 at 1440 and at 1900, not 112 — so a 128px budget left
+   * the panel's bottom 5px BELOW the fold at 1900 instead of 16px above it.
+   *   64 (--nav-clear) + 16 (padding) + 35 (the brand row) + 2 (`.workspace .brand` margin)
+   *   + 16 (band gap) = 133,  + 16 reserved at the bottom = 149.
+   * Verified on the rendered DOM: 133 + (950 − 149) = 934 = 950 − 16 at 1900, and 133 + (900 − 149)
+   * = 884 = 900 − 16 at 1440. ⛔ Left at 128 this would have been a silently stale number of exactly
+   * the kind this file keeps a list of — and `.domain-detail`'s own rules are out of scope for UI-2c,
+   * so restoring the invariant they were built on is the way to leave them alone.
+   *
+   * ⛔ UI-2d — AND NOW IT IS WRITTEN AS THE SUM INSTEAD OF AS ITS TOTAL, because this is the SECOND
+   * consecutive item to move the origin and re-type a literal. Deleting `.brand` dropped the first row
+   * from 35 + 2 to the mode segment's 31: measured origin y = 127 at 1440 and 1900 (was 133), so the
+   * 149 budget over-reserved by 6px and the panel's bottom sat 22px above the fold instead of 16.
+   * The terms are now the tokens they always were —
+   *   --nav-clear + --sp-4 (region padding) + 31px (the mode segment, measured) + --sp-4 (row gap)
+   *   + --sp-4 (the bottom reserve)  =  64 + 16 + 31 + 16 + 16  =  143
+   * — so the next item that changes `--nav-clear` or the spacing ladder cannot leave this stale, and
+   * only ONE literal remains to go wrong: the segment's own 31px height.
+   * ⛔ It is `height`, not `max-height`, at `.domain-detail` (measured: computed max-height is `none`),
+   * so an over-reserve is not slack — it is a panel of the wrong size. Verified after: 127 + (900 −
+   * 143) = 884 = 900 − 16 at 1440, and 127 + (950 − 143) = 934 = 950 − 16 at 1900. */
+  /* ⚠ UI-FIX step 5 — one term dropped, not re-typed: the region's block-start padding is now 0 (see
+   * `.workspace`), so the origin loses that 16px. 79 + 31 + 16 = 126, + 16 reserved = 142. This is the
+   * third item to move this origin and the first where the sum updated itself for two of the terms. */
+  --detail-max-h: calc(100dvh - var(--nav-clear) - 31px - var(--sp-4) - var(--sp-4));
+
+  /* ⛔ UI-2 — THE MAP'S SEAT. The owner's decision is that the map is PRESENT on the dashboard
+   * and ⛔ does not take the largest share of the width, so this is bounded at both ends and
+   * neither bound is taste:
+   *   · `min(…)` keeps it a MINORITY at every width — 34 % at 1440 (489.6px) and 29.5 % at
+   *     1900 (560px). The content keeps 66 % / 70.5 %, so the map is never the larger region.
+   *   · the 560px ceiling stops a 4K viewport from spending 34 % on a map nobody asked to grow;
+   *     past ~1650px the seat is fixed and the content column takes the rest.
+   * ⚠ Measured before this item, the dashboard knew only 0 % (the workspace covered the map) or
+   * 100 % (`.workspace.hidden` revealed it) — never a share in between, on any of the four
+   * surfaces. That two-state behaviour is what this token replaces. */
+  --map-seat: max(520px, 40vw);
+
+  /* ⛔ UI-2b — THE HEIGHT CAP. UI-2 ran the seat from y 60 to 10px off the bottom: 830px of an
+   * 900px viewport, which at 34 % width measured **1 : 1.70** — taller than it is wide. That is the
+   * owner's symptom 1: a third of the width at full height reads as a STRIP, not as a map. With
+   * 40 % width and this cap the region measures 1 : 1.19 at 1440 and 1 : 0.95 at 1900 — a map.
+   * ⚠ `vh` here, not `dvh`, on purpose: unlike `--detail-max-h` this is a DECORATIVE ceiling on a
+   * region that is already inset from the bottom, so a retracting mobile toolbar cannot clip
+   * content out of it — and `dvh` would make the map resize while the toolbar animates, which for a
+   * Leaflet canvas means a re-render per frame.
+   *
+   * ⛔ UI-2c — 76vh IS REPLACED BY THE RULE IT WAS STANDING IN FOR, and that is the change rather
+   * than a tidy-up. `76vh` states nothing about SHAPE: it produced 1 : 0.95 at 1900×950 and 1 : 1.19
+   * at 1440×900 — two shapes from one number — and left 168px / 156px of dead band under the map at
+   * the two gate sizes (measured, both). The owner's decision is «مربّعة نسبياً», so SQUARENESS is
+   * the constraint and the height is DERIVED from it:
+   *   height = min( the band the viewport actually offers , the width × the squareness ceiling )
+   * Whichever term binds, the region can never become a portrait strip — the second one forbids it at
+   * every viewport, which `76vh` could not.
+   *
+   * ⛔ AND THE CEILING IS 1.0, NOT THE 1.19 THE SEAT MEASURES TODAY — because 1.19 CANNOT satisfy the
+   * owner's three clauses at once, and it was tried and measured before being rejected. The clauses are
+   * «مربّعة نسبياً» · «لا تمتدّ لكامل الارتفاع» · «ويُشغَل ما تحتها عند الحاجة». At 1.2, measured:
+   *     1440×900 → 576 × 691  = 1 : 1.20 · 77 % of the height · 145px under it   ✓ all three
+   *     1900×950 → 760 × 874  = 1 : 1.15 · 92 % of the height ·  12px under it   ⛔ two of three
+   * At 1900 the available band binds before the ratio does, so the map runs to 92 % of the viewport and
+   * there is no "under it" left to occupy — the second and third clauses fail together, and the third
+   * one PRESUPPOSES a band. Solving `760 × r < 950 − 64 − 100` for a band worth having gives r ≲ 1.03,
+   * so the ceiling has to be at or below ~1. At 1.0, measured:
+   *     1440×900  → 576 × 576 = 1 : 1.00 · 64 % ·  260px under it
+   *     1900×950  → 760 × 760 = 1 : 1.00 · 80 % ·  126px under it
+   *     1900×1250 → 760 × 760 = 1 : 1.00 · 61 % ·  426px under it
+   * ⛔ 1.0 IS ALSO THE ONLY NON-ARBITRARY VALUE HERE: it is what «square» means with no qualifier,
+   * and «نسبياً» is satisfied a fortiori by being squarer than the shape the owner approved rather
+   * than less. And the shape is now IDENTICAL at every width, which was the whole complaint against
+   * `76vh` — one number that produced two shapes.
+   * ⚠ WHAT IT COSTS, stated rather than buried: at 1440 the map loses 108px of height (684 → 576, −16 %
+   * of its area) while keeping every pixel of its width. The owner can overrule with one edit — 1.19
+   * restores today's exact shape at 1440 and the table above is the price at 1900.
+   *
+   * ⛔ AND `--below-map-h` WAS THE OWNER'S «تنكمش فلا تحجز حتى تُستعمل» WRITTEN AS ARITHMETIC.
+   * It read 0px while no content claimed the band, so no empty box was held open for content
+   * nobody had chosen. ⛔ What must not happen is a reserved-empty band, which is the same
+   * symptom under a new name. ⚠ Note the ORDER this implies: the band exists because the map
+   * is square, not because a height was set aside for it.
+   *
+   * ⛔ DASH-BAND — THE ZERO IS SPENT, AND THAT IS THE REVERSAL THE OWNER ASKED FOR. Measured
+   * on the rendered DOM at both gate widths before the value was chosen: SeatFreshness (the
+   * per-domain freshness bar under the seat) renders **27px tall** at 1440×900 and at
+   * 1900×950 alike — one text line, its own padding, two hairlines. The token is that height
+   * PLUS the gutter above it (27 + 12 = 39), because .seat-fresh starts one gutter below the
+   * seat's bottom edge and the seat gives back exactly what the bar consumes:
+   *     1440×900 → min(900−79−39−16, 576) = 576 · bar bottom y 694, viewport−inset 884 ✓
+   *     1900×950 → min(950−79−39−16, 760) = 760 · bar bottom y 878, viewport−inset 934 ✓
+   * ⛔ If the bar's content ever grows a line, this number must be re-measured — the bar is
+   * content-sized by design (see app.css .seat-fresh), so a stale token here would overflow
+   * the viewport or re-open an empty gap. Below 1320px the bar does not render at all (the
+   * workspace owns that band when stacked), so the term costs nothing where it is unused. */
+  --map-ratio-max: 1;
+  /* ⛔ a LITERAL ON PURPOSE, like --nav-h above: 39 = the measured 27px bar + the 12px
+   * gutter, and keeping it resolvable lets G8's orphan check keep reading this token.
+   * The derivation lives in the paragraph above; re-measure if the bar grows a line. */
+  --below-map-h: 39px;
+  /* ⚠ UI-FIX step 1 — the trailing term is `--page-inset`, not `--sp-3`: it is the gap from the seat's
+   * BOTTOM edge to the viewport's, which is a page edge like the other three and was the fourth place
+   * the same distance was declared with a different token. ⛔ Costs the map nothing at either gate
+   * width, and that was checked rather than assumed — the ratio term binds at both:
+   *   1440×900 → min(900−79−0−16, 576) = 576   ·   1900×950 → min(950−79−0−16, 760) = 760 */
+  --map-seat-h: min(
+    calc(100vh - var(--nav-clear) - var(--below-map-h) - var(--page-inset)),
+    calc(var(--map-seat) * var(--map-ratio-max))
+  );
+}
+
+/* Scoped to [data-theme] (not :root) so the token set can apply to a subtree:
+ * <html> carries the fixed UI theme, while .map-host carries the basemap's own
+ * day/night — the map + its glyphs recolor, the surrounding UI never does. */
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  /* ================= SURFACE SET — Forest Direction 2, immersive (THEME-2b) =================
+   * The colour switch THEME-2's commit 1 deliberately deferred. Values come through the
+   * bridge's raw ramp (forest.css at :root), never as literals, so the identity is one
+   * ramp away from any future change.
+   *
+   * ⚠ REVERSIBILITY: NINE declarations were switched — the EIGHT in this contiguous block
+   * plus `--scrim`, which lives at the end of this same [data-theme="dark"] block because
+   * that is where it already was and moving it would reorder declarations for no reason.
+   * Restoring all nine to the values recorded below returns the navy identity exactly;
+   * nothing else moved. (Stated precisely because a revert instruction that misses one
+   * token is worse than none.) The previous values:
+   *     --bg: #030611
+   *     --bg-grad: radial(60% 50% at 18% 12%, rgba(35,107,105,.10)),
+   *                radial(50% 40% at 83% 9%, rgba(217,171,74,.07)),
+   *                linear(165deg, #010206 0%, #030611 40%, #040816 100%)
+   *     --panel: #0a0e1a · --panel-glass: rgba(10,14,26,.82) · --panel-raised: #131a2c
+   *     --ink: #f4f1ec · --ink-dim: #a8b0c2 · --hair: rgba(36,48,78,.45)
+   *     --scrim: rgba(6,10,22,.78)
+   *
+   * ⛔ NOT switched, on purpose: --accent (the gold — it paints the info-severity badge and
+   * the «محسوب» freshness axis, and Direction 2's --accent is a green that would silently
+   * repaint both), the four --sev-* severity tokens, and every map/glyph/series/chart/
+   * --tile-filter token. The map stays dark by the owner's decision. */
+  --bg: var(--forest-900);             /* #002623 — Direction 2 ground */
+  --bg-grad:
+    radial-gradient(ellipse 60% 50% at 18% 12%, rgba(66, 129, 119, 0.14) 0%, transparent 100%),
+    radial-gradient(ellipse 50% 40% at 83% 9%, rgba(217, 171, 74, 0.07) 0%, transparent 100%),
+    linear-gradient(165deg, #001a18 0%, #002623 40%, #03342e 100%);
+  --panel: var(--forest-800);          /* #03342e — the card/panel surface */
+  /* ⚠ ALPHA UNCHANGED at .82 — only the hue moved. I first raised it to .88 on the
+   * assumption a green glass needs more body over dark tiles; measured, that was wrong.
+   * Composited over a filtered basemap tile (~#232323): ink reads 11.81:1 at .82 and
+   * 11.68:1 at .88 — indistinguishable, and .88 is fractionally WORSE. Navy glass read
+   * 15.63:1, so the switch costs contrast but lands far above AA. The brief's rule was
+   * "adjust transparency IF contrast weakens"; it did not weaken enough to need it, so
+   * nothing was adjusted. */
+  --panel-glass: rgba(3, 52, 46, 0.82);
+  --panel-raised: var(--forest-700);   /* #054239 — Direction 2 surface-2 */
+  /* ⛔ EVERY RATIO NAMES ITS SURFACE. "11.44" and "7.13" stood here unqualified and were read,
+   * in CHART-TEXT-1, as if they described the charts — they are the --panel figures, and the
+   * charts sit on --bg. Both numbers were true and both were useless without the surface. */
+  --ink: var(--wheat-100);             /* #edebe0 — 13.49:1 on --bg · 11.44:1 on --panel */
+  --ink-dim: var(--forest-200);        /* #9cc3bb —  8.40:1 on --bg ·  7.13:1 on --panel.
+                                        * ⛔ NOT usable for chart text: the same token is
+                                        * #64748b in the light block = 4.22:1 on light --bg,
+                                        * under the 4.5 text bar. See app.css .chart-svg text. */
+  --hair: rgba(14, 76, 65, 0.55);      /* Direction 2 border #0e4c41, as a hairline */
+  /* ================= end surface set ================= */
+  --accent: #d9ab4a;                   /* brand muted gold — ⛔ NOT switched (see above) */
+  --accent-dim: #6b5420;
+
+  /* ---- THE WORDMARK'S OWN INK — «Atheer RADAR» only, nothing else ----------------
+   * Set by the owner to #988561 so the wordmark matches the brand mark beside it (the
+   * logo's own body samples #9c8661 — see .brand-mark in app.css).
+   *
+   * ⛔ THEME-INDEPENDENT, DELIBERATELY. It is declared identically in the light block so
+   * the lockup reads the same in both themes; it must NOT be folded into --accent, which
+   * paints the info-severity badge and the «محسوب» freshness axis and is stepped down to
+   * #8f6b1e for light. A wordmark colour and a severity colour are different jobs.
+   *
+   * ⚠ MEASURED, ON THE SURFACES IT ACTUALLY SITS ON (both are --panel-glass composited
+   * over that theme's --bg, because the nav pill and the sidebars are glass, not solid):
+   *     dark   #023140 ground -> 3.97:1   (was 6.68:1 on --accent)
+   *     light  #faf8f3 paper  -> 3.37:1   (was 14.98:1 on --ink)
+   * Both are UNDER the 4.5:1 bar for text this size (12px nav / 15px sidebar are normal
+   * text by WCAG — the bold-large threshold is 18.66px).
+   *
+   * ✅ WCAG 1.4.3 EXEMPTS LOGOTYPES: "text that is part of a logo or brand name has no
+   * minimum contrast requirement", and this token paints the brand name and nothing else.
+   * So the ratios above are recorded as a LEGIBILITY fact, not a conformance failure —
+   * and they are recorded rather than omitted precisely because the exemption makes them
+   * easy to omit. ⛔ Do not reuse this token for any non-wordmark text; the exemption does
+   * not travel with the colour. */
+  --brand-ink: #988561;
+  --ok: #22c55e;                       /* status — live push */
+  --alert: #f59e0b;                    /* status — polling / warnings */
+  --select: #ffffff;                   /* selected contact: white-hot */
+  --danger: #ef4444;
+
+  /* ---- SEVERITY AXIS (THEME-2) — four roles, four dedicated tokens ----
+   * Own tokens rather than reusing --danger/--alert/--accent/--ink-dim, because those
+   * four are referenced 20/29/34/79 times for non-severity purposes; rebinding them
+   * would repaint far more than the severity axis.
+   *
+   * Values from Forest's palette, chosen by measurement not taste. The previous assignment
+   * was BROKEN: gold (info) against amber (medium) sat at ΔE2000 9.60 — the closest pair on
+   * the board, and 4.75 under deuteranopia. The worst pair is now medium↔info at 26.47.
+   *
+   * ⚠ That 26.47 was first measured on the OLD navy surface (#0a0e1a) and it STILL HOLDS on
+   * #03342e — ΔE2000 is a pairwise distance and a surface change cannot move it. What the
+   * surface change did move is each colour's contrast AGAINST it, re-measured in THEME-2b:
+   * info 10.46:1 · medium 4.69 · high 4.48 · low 3.02. All four still clear AA or AA-large,
+   * which was the gate. ⚠ But high fell a TIER (6.31 AA → 4.48 AA-large) and low now sits
+   * 0.02 above the 3:1 floor, so at the badge's 10px neither high nor low meets AA for text
+   * — low did not before either (4.25). The word on the badge and the stripe's non-colour
+   * channel are what carry the meaning; the colour is the redundant channel.
+   *
+   * ⚠ --sev-info is deliberately OUTSIDE the green ramp (forest-100, a near-white). In
+   * Forest's Direction 2 an "info" green would collide with both --success and muted
+   * body text. Military alerts are info: the colour must read calm and must never imply
+   * threat — a near-white does neither. */
+  --sev-high: var(--umber-200);        /* #c97f89 — red family, danger */
+  --sev-medium: var(--wheat-600);      /* #a89570 — wheat, caution */
+  --sev-low: var(--forest-400);        /* #428177 — dimmest of the four */
+  --sev-info: var(--forest-100);       /* #d3e5e0 — calm, NOT a threat hue */
+  /* ⚠ the navy --hair that used to sit here is GONE, not moved: it was declared AFTER the
+   * surface set above and won by cascade order, silently reverting the switched hairline.
+   * One declaration per token, in the surface block. */
+
+  --glyph-air: var(--accent);
+  --glyph-ground: #3fb4ab;             /* brand teal, brightened for glyphs */
+  --glyph-mil: #e0708c;                /* military overlay — burgundy family, lifted for navy */
+  --glyph-glow-mil: rgba(122, 36, 47, 0.65);
+  --glyph-adsb: #f9a03c;               /* ADS-B Exchange overlay — orange, distinct from gold air */
+  --glyph-glow-adsb: rgba(234, 88, 12, 0.6);
+  --glyph-vessel: #22d3ee;             /* maritime overlay — sea cyan, distinct from gold/teal/burgundy */
+  --glyph-glow-vessel: rgba(34, 211, 238, 0.5);
+  --glyph-vessel-mt: #f0b429;          /* MarineTraffic source — amber, distinct from AIS cyan */
+  --glyph-sat: #c4b5fd;                /* satellite — soft violet, distinct from gold/cyan */
+  --glyph-glow-sat: rgba(147, 112, 219, 0.55);
+  --glyph-gnss: #ff4d6d;               /* GNSS-anomaly overlay — crimson (denial/threat), distinct from vessel-cyan/sat-violet (never co-renders with mil) */
+  --glyph-glow-gnss: rgba(255, 77, 109, 0.5);
+  --glyph-darkland: #fb923c;           /* dark-vessel with an ON-LAND (suspect/spoofed) position — orange caution, distinct from at-sea violet + GNSS crimson + MT amber */
+  --glyph-glow-air: rgba(217, 171, 74, 0.5);
+  --glyph-glow-ground: rgba(35, 107, 105, 0.55);
+  --trail: rgba(217, 171, 74, 0.42);
+  --trail-selected: rgba(255, 255, 255, 0.85);
+
+  --series-air: #ae8a39;               /* validated categorical slot 1 */
+  --series-ground: #17a496;            /* validated categorical slot 2 */
+  /* ⚠ These were navy and had to move with the surface: measured on the new panel, the
+   * navy axis fell to 1.05:1 — effectively invisible — and the grid to 1.27:1. Translated
+   * to preserve the OLD visual relationship rather than redesigned: on the old panel the
+   * grid read 1.11:1 and the axis 1.47:1; forest-700 gives 1.20:1 and forest-600 1.55:1. */
+  /* ⛔ DATAVIZ-1 — RAISED, because both were measured BELOW the 3:1 non-text bar on the
+   * surface the charts ACTUALLY sit on. `.chart-card` and `.stats-view` declare no background
+   * anywhere in app.css, so a chart inherits the PAGE surface `--bg` (#002623), not `--panel`
+   * (#03342e) — the card surface the old debt note measured against and the charts are not in.
+   * Against the real surface: grid was forest-700 at **1.42:1**, the axis forest-600 at
+   * **1.82:1**. A gridline at 1.42:1 is at the edge of visibility, not "subtle".
+   *
+   * ⛔ BOTH MOVE TO THE CHARCOAL RAMP, AND THE HUE IS THE POINT, not just the contrast. The two
+   * series are gold (#ae8a39) and teal (#17a496). A green axis clearing the bar — forest-400,
+   * 3.56:1 — was tried and REJECTED on measurement: ΔE00 to the teal series is only **12.22**
+   * (10.42 green-blind), i.e. a teal rule drawn through teal bars. Charcoal is hue-neutral and
+   * collides with neither: grid ΔE 26.3 / 30.2 and axis ΔE 21.5 / 26.0 against air / ground.
+   *   grid  --char-500  #6f6b6a  3.06:1  — the LOWEST step over the bar; a gridline should be
+   *                                        the quietest thing that still exists.
+   *   axis  --char-400  #928d8a  4.92:1  — the structural rule (zero line + hover crosshair),
+   *                                        clearly above the grid so the frame reads as frame.
+   * ⚠ Its 4.92:1 sits level with --series-air's 4.99:1, and that is accepted deliberately:
+   * perceived weight is AREA × contrast, and a 1px rule at 4.92 does not out-shout a filled
+   * bar or a 2px path at the same ratio. Contrast parity is not visual parity here. */
+  --chart-grid: var(--char-500);
+  --chart-axis: var(--char-400);
+
+  /* THEME-1: Qomra is the UI face. Cairo stays directly behind it, so a failed or blocked
+   * font load degrades to exactly the previous typeface rather than to system-ui.
+   * ⚠ REVERSIBILITY: this declaration is the ONLY binding — remove `"Qomra", ` from it
+   * (here AND in the other theme block below/above, since --font-ui is declared once per
+   * theme) and the pre-THEME-1 rendering returns completely. The five @font-face rules in
+   * fonts.css can stay: a face no font-family names is never fetched — measured, weights
+   * 300/500/900 report status "unloaded" while declared, costing zero bytes. */
+  --font-ui: "Qomra", "Cairo", system-ui, -apple-system, sans-serif;
+  --font-brand: "Manrope", "Cairo", sans-serif;
+  --font-data: "JetBrains Mono", "Cairo", ui-monospace, monospace; /* Arabic glyphs fall back to Cairo, digits stay mono */
+
+  --radius-sm: 12px;
+  --radius-xs: 8px;
+  --shadow: 0 4px 18px rgba(0, 0, 0, 0.45), 0 24px 60px rgba(0, 0, 0, 0.6);
+  --glow-gold: 0 0 50px rgba(217, 171, 74, 0.05);
+
+  --tile-filter: grayscale(1) brightness(0.38) contrast(1.06);
+  --focus-ring: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent);
+  --scrim: rgba(0, 26, 24, 0.80);      /* forest-950 toned; alpha .78 -> .80 for body */
+}
+
+[data-theme="light"] {
+  color-scheme: light;
+
+  --bg: #f4f1ec;                       /* brand off-white as paper */
+  --bg-grad: linear-gradient(165deg, #f8f5f0 0%, #f4f1ec 50%, #eee9e0 100%);
+  --panel: #fbf9f4;
+  --panel-glass: rgba(251, 249, 244, 0.86);
+  --panel-raised: #ffffff;
+  --ink: #1a2233;                      /* navy ink on paper */
+  --ink-dim: #64748b;
+  --accent: #8f6b1e;                   /* gold, stepped down for light */
+  --accent-dim: #d9c391;
+
+  /* ⛔ THE SAME VALUE AS DARK, ON PURPOSE — see the note in the dark block. The wordmark
+   * is one colour in both themes; --accent is not, and that is why they are separate
+   * tokens. Measured here: 3.37:1 on the light glass (#faf8f3). */
+  --brand-ink: #988561;
+  --ok: #15803d;
+  --alert: #b45309;
+  --select: #7a242f;                   /* brand burgundy — selection */
+  --danger: #c02626;
+
+  /* ⛔ FROZEN AND FAILING (THEME-4). THIS SEVERITY AXIS IS NOT SHIPPED, AND ITS DISTRIBUTION
+   * HAS NOT BEEN VALIDATED AGAINST THE ΔE ≥ 20 BAR. It must not be published as it stands.
+   *
+   * MEASURED, CIEDE2000, all six pairs:
+   *   high/medium 16.38 · medium/info 16.92 · high/info 31.20 · low/info 34.43
+   *   medium/low 36.59 · high/low 37.02
+   * Two pairs are UNDER the threshold of 20 that THEME-2b held the dark axis to (worst pair
+   * 26.47). A light build shipped from these values would put «مرتفع» and «متوسط» 16.38 apart
+   * — close enough that the badge colour stops being a signal and only the WORD carries the
+   * judgement, which is the UI-FRESH failure mode this project designs against.
+   *
+   * ⛔ NOT FIXED HERE, DELIBERATELY: there is no consumer. Measured in THEME-4, with line
+   * references so nobody has to re-derive it —
+   *   · index.html sets `document.documentElement.dataset.theme = "dark"` UNCONDITIONALLY.
+   *     No persisted value is read, no `prefers-color-scheme` branch exists.
+   *   · `scope-theme` is named in one comment in lib/theme.ts and is read and written by
+   *     NOTHING — grep returns that comment and nothing else.
+   *   · `currentTheme()` therefore returns "dark" always, and lib/theme.ts states the UI
+   *     theme is "NOT changed at runtime".
+   *   · the ONLY runtime theme control (App.tsx `onToggleTheme` → `toggleMapTheme`) is the
+   *     BASEMAP day/night. It stamps data-theme on `.map-host` alone (MapView), so this whole
+   *     block DOES apply — to the map subtree.
+   *   · and that subtree consumes none of it: with the basemap flipped to light, `--sev-high`
+   *     inside `.map-host` really does resolve to #c02626, while **0 of the 20 severity-
+   *     carrying elements on the page are inside `.map-host`** and every one of them still
+   *     renders the DARK #c97f89. All 14 `--sev-*` consumers in app.css are UI chrome —
+   *     country card, badges, stat tiles, the secondary line, result cards.
+   * Repainting a palette with no consumer is work with no reader; recording that it would
+   * fail is the part that has value.
+   *
+   * ⛔ BEFORE A LIGHT BUILD IS EVER TURNED ON, this axis needs the THEME-2 treatment it never
+   * had: re-pick from the Forest palette for the smallest change that clears ΔE ≥ 20 on all
+   * six pairs, keep --sev-info OUT of the green ramp, then prove it — green-blindness
+   * simulation, each severity's contrast against the light surface (AA or AA-large), and the
+   * non-colour second channel still separating all four in greyscale. Until then the values
+   * below are the pre-THEME-2 ones, kept only so the block is not empty. */
+  --sev-high: var(--danger);
+  --sev-medium: var(--alert);
+  --sev-low: var(--ink-dim);
+  --sev-info: var(--accent);
+  --hair: rgba(26, 34, 51, 0.14);
+
+  --glyph-air: var(--accent);
+  --glyph-ground: #008573;
+  --glyph-mil: #99304a;                /* military overlay — burgundy family */
+  --glyph-glow-mil: rgba(122, 36, 47, 0.3);
+  --glyph-adsb: #ea580c;               /* ADS-B Exchange overlay — orange-600 for light basemap */
+  --glyph-glow-adsb: rgba(234, 88, 12, 0.3);
+  --glyph-vessel: #0891b2;             /* maritime overlay — sea cyan (cyan-600) */
+  --glyph-vessel-mt: #b45309;          /* MarineTraffic source — amber-700 for light basemap */
+  --glyph-glow-vessel: rgba(8, 145, 178, 0.3);
+  --glyph-sat: #6d28d9;                /* satellite — violet-700 for light basemap */
+  --glyph-glow-sat: rgba(109, 40, 217, 0.3);
+  --glyph-gnss: #d81b52;               /* GNSS-anomaly overlay — deep crimson for paper */
+  --glyph-glow-gnss: rgba(216, 27, 82, 0.3);
+  --glyph-darkland: #c2410c;           /* on-land (suspect/spoofed) dark position — orange-700 for paper */
+  --glyph-glow-air: rgba(143, 107, 30, 0.3);
+  --glyph-glow-ground: rgba(0, 133, 115, 0.3);
+  --trail: rgba(143, 107, 30, 0.4);
+  --trail-selected: rgba(122, 36, 47, 0.85);
+
+  --series-air: #8f6b1e;               /* validated categorical slot 1 */
+  --series-ground: #008573;            /* validated categorical slot 2 */
+  --chart-grid: #e8e3d8;
+  --chart-axis: #cfc8b8;
+
+  /* THEME-1: Qomra is the UI face. Cairo stays directly behind it, so a failed or blocked
+   * font load degrades to exactly the previous typeface rather than to system-ui.
+   * ⚠ REVERSIBILITY: this declaration is the ONLY binding — remove `"Qomra", ` from it
+   * (here AND in the other theme block below/above, since --font-ui is declared once per
+   * theme) and the pre-THEME-1 rendering returns completely. The five @font-face rules in
+   * fonts.css can stay: a face no font-family names is never fetched — measured, weights
+   * 300/500/900 report status "unloaded" while declared, costing zero bytes. */
+  --font-ui: "Qomra", "Cairo", system-ui, -apple-system, sans-serif;
+  --font-brand: "Manrope", "Cairo", sans-serif;
+  --font-data: "JetBrains Mono", "Cairo", ui-monospace, monospace; /* Arabic glyphs fall back to Cairo, digits stay mono */
+
+  --radius-sm: 12px;
+  --radius-xs: 8px;
+  --shadow: 0 4px 14px rgba(26, 34, 51, 0.08), 0 18px 40px rgba(26, 34, 51, 0.08);
+  --glow-gold: 0 0 50px rgba(143, 107, 30, 0.04);
+
+  --tile-filter: saturate(0.72) sepia(0.1) contrast(0.92);
+  --focus-ring: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent);
+  --scrim: rgba(244, 241, 236, 0.86);
+}
